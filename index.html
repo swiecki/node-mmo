@@ -64,11 +64,13 @@ function game() {
     }
 
   updateAll();
+  //reset canvas in between each frame, paint it black for space
   context.fillStyle = 'black';
   context.fillRect(0, 0, context_width, context_height);
   drawAll(context, starlist, context_width, context_height);
-    //framerate
+    //framerate stuff
     frameCount++;
+    
   }, drawInterval);
 }
 
@@ -81,6 +83,7 @@ function updateAll() {
 }
   
 function drawAll(context, starlist, cw, ch) {
+  //these are needed because the 0,0 of the ship sprite is the upper left corner, not the center
   var xadjust = cw/2 - 24;
   var yadjust = ch/2 - 22;
   stars(context, starlist, players[myid].x, players[myid].y, cw, ch);
@@ -101,7 +104,7 @@ function drawAll(context, starlist, cw, ch) {
 function initiateStars(w,h) {
   var temparray = new Array();
   var numStars = 100000;
-  // add 50 stars to the array 50 stars.
+  // Generate numStars stars, with a quarter in each quadrant. (0,0 is the world centerpoint)
   for (i = 0; i <= numStars/4; i++) {
     // Get random positions for stars.
     var x = Math.floor(Math.random() * ((w * 10)-1));
@@ -129,19 +132,16 @@ function initiateStars(w,h) {
   return temparray;
 }
 function stars(ctx, starlist, px, py, cw, ch) {
-        // Draw 50 stars.
         for (var i in starlist) {
-          // Get random positions for stars.
           var x = starlist[i][0];
           var y = starlist[i][1];
-          //transform coords from world coordinate system to pixel coordinate system
+          // Make the stars white
           ctx.fillStyle = "white";
         //check if star would be within view field
         if (Math.abs(px - x) < cw/2 + 5 && Math.abs(py - y) < ch/2 + 5){
-          // Draw an individual star.
+          //transform coords from world coordinate system to pixel coordinate system
           x = x + (cw/2);
           y = y + (ch/2);
-          // Make the stars white
           ctx.beginPath();
           ctx.arc(x - px, y - py, 3, 0, Math.PI * 2, true);
           ctx.closePath();
