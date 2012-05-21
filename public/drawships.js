@@ -1,6 +1,6 @@
   //new ship code starts here
   //ph and pw are pixel height and pixel width
-  var ph = 5, pw = 5;
+  var ph = 4, pw = 4;
   //colors- not sure about greens, pinks 1 is darkest 6 is lightest
   var black = "rgb(0,0,0)",
   d1green = "rgb(48,92,83)",
@@ -117,11 +117,19 @@ function s1col6 (ctx,x,y){
   context.fillRect(x + (5*pw), y + (11*ph), pw, ph);
 }
 function s1enginesbottom(ctx,x,y) {
+  var op1 = Math.random();
   var radgrad = ctx.createRadialGradient(x+6*pw,y+12*ph,0,x+6*pw,y+12*ph,2.3*pw);
-  radgrad.addColorStop(0, 'rgba(255,255,255,1)');
-  radgrad.addColorStop(0.8, 'rgba(168,236,246,.7)');
-  radgrad.addColorStop(0.9, 'rgba(75,159,172,.85)');
+  if (op1 > .2){
+  radgrad.addColorStop(0, 'rgba(255,255,255,1)');//def op 1
+  radgrad.addColorStop(0.8, 'rgba(168,236,246,.7)');//def op .7
+  radgrad.addColorStop(0.9, 'rgba(75,159,172,.85)');//defop.85
   radgrad.addColorStop(1, 'rgba(255,255,255,0)');//notice alpha channel is invisible
+  } else {
+  radgrad.addColorStop(0, 'rgba(255,255,255,.8)');//def op 1
+  radgrad.addColorStop(0.8, 'rgba(168,236,246,.3)');//def op .7
+  radgrad.addColorStop(0.9, 'rgba(75,159,172,.65)');//defop.85
+  radgrad.addColorStop(1, 'rgba(255,255,255,0)');//notice alpha channel is invisible
+  }
   // draw shape
   ctx.fillStyle = radgrad;
   ctx.fillRect(x,y,20*ph,20*pw);

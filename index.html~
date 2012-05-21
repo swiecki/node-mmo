@@ -4,7 +4,7 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
 </head>
 <body>
-<canvas id="game" style="border: 1px solid #000;" height="500" width="800">Your browser doesn't support canvas</canvas>
+<canvas id="game" style="border: 1px solid #000;" height="980" width="1820">Your browser doesn't support canvas</canvas>
 <script src="/socket.io/socket.io.js"></script>
 <script>
   var socket = io.connect('http://localhost');
@@ -16,7 +16,16 @@ var y = 70;
 var myid = 0;
 var ship;
 var players = new Array();
-var upp = false, downp = false, leftp = false, rightp = false;
+var upp = false, downp = false, leftp = false, rightp = false, xstop = false;
+
+//Debug stuff:
+var drawInterval = 33;
+var frameCount = 0;
+var fps = 0;
+var maxfps = 1 / (drawInterval / 1000);
+var lastTime = new Date();
+
+
 socket.on('newstart', function (data) {
   x = data.x;
   y = data.y;
@@ -36,67 +45,108 @@ socket.on('update', function (data) {
 socket.on('removeplayer', function (data) {
   players.splice(data.id, 1, []);
 });
+
 function game() {
   // Get the canvas element and its drawing context
   var canvas = document.getElementById('game');
   var context = canvas.getContext('2d');
   var context_width = canvas.width;
   var context_height = canvas.height;
-  var starlist = initiateStars();
+  var starlist = initiateStars(context_width, context_height);
   var gameloop = setInterval(function() {
+    //these lines are for framerate stuff
+    var nowTime = new Date();
+    var diffTime = Math.ceil((nowTime.getTime() - lastTime.getTime()));
+    if (diffTime >= 1000) {
+    fps = frameCount;
+    frameCount = 0.0;
+    lastTime = nowTime;
+    }
+
   updateAll();
   context.fillStyle = 'black';
-  context.fillRect(0, 0, 800, 500);
-  drawAll(context, starlist);
-  }, 1000 / 30);
+  context.fillRect(0, 0, context_width, context_height);
+  drawAll(context, starlist, context_width, context_height);
+    //framerate
+    frameCount++;
+  }, drawInterval);
 }
+
 function updateAll() {
   // send a single update packet with everything that's happened
   //here 'p' stands for pressed
-  if (upp || downp || leftp || rightp) {
-    socket.emit('movement', { id: myid, up: upp, down: downp, left: leftp, right: rightp });
-  }
+  //if (upp || downp || leftp || rightp) {
+    socket.emit('dataupdate', { id: myid, up: upp, down: downp, left: leftp, right: rightp, xpressed: xstop });
+  //}
 }
   
-function drawAll(context, starlist) {
-  stars(context, starlist);
+function drawAll(context, starlist, cw, ch) {
+  var xadjust = cw/2 - 24;
+  var yadjust = ch/2 - 22;
+  stars(context, starlist, players[myid].x, players[myid].y, cw, ch);
+  //draw the player in the middle of the screen
+  drawPlayer(context, players[myid].ship, xadjust, yadjust);
+
+  //draw other players-- this has to be changed so they are drawn in relation to the player's current position
   for (var playerid in players) {
-    if (players[playerid].x != null) {
-      drawPlayer(context, players[playerid].ship, players[playerid].x, players[playerid].y);
+    if (players[playerid].x != null && playerid != myid) {
+      drawPlayer(context, players[playerid].ship, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y);
     }
   }
+  framerateDraw(context);
 }
-function initiateStars() {
-  var array = new Array();
+
+//TODO: generate some negative coordinate stars as well
+//TODO: move star generation logic to the server, have it pass the array to the client upon connection
+function initiateStars(w,h) {
+  var temparray = new Array();
+  var numStars = 100000;
   // add 50 stars to the array 50 stars.
-  for (i = 0; i <= 50; i++) {
+  for (i = 0; i <= numStars/4; i++) {
     // Get random positions for stars.
-    var x = Math.floor(Math.random() * 799);
-    var y = Math.floor(Math.random() * 599);
-    x[i] = [x,y];
+    var x = Math.floor(Math.random() * ((w * 10)-1));
+    var y = Math.floor(Math.random() * ((h * 10)-1));
+    temparray[i] = [x,y];
   }
-  return array;
+  for (i = (numStars/4 + 1); i <= numStars/2; i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * -10)-1));
+    var y = Math.floor(Math.random() * ((h * 10)-1));
+    temparray[i] = [x,y];
+  }
+  for (i = (numStars/2 + 1); i <= 3*(numStars/4); i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * 10)-1));
+    var y = Math.floor(Math.random() * ((h * -10)-1));
+    temparray[i] = [x,y];
+  }
+  for (i = (3*(numStars/4) + 1); i <= numStars; i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * -10)-1));
+    var y = Math.floor(Math.random() * ((h * -10)-1));
+    temparray[i] = [x,y];
+  }
+  return temparray;
 }
-
-function stars(ctx, starlist) {
-
+function stars(ctx, starlist, px, py, cw, ch) {
         // Draw 50 stars.
         for (var i in starlist) {
           // Get random positions for stars.
           var x = starlist[i][0];
           var y = starlist[i][1];
-
-          // Make the stars white
+          //transform coords from world coordinate system to pixel coordinate system
           ctx.fillStyle = "white";
-
-          // Give the ship some room.
-          //if (x < 30 || y < 30) ctx.fillStyle = "black";
-
+        //check if star would be within view field
+        if (Math.abs(px - x) < cw/2 + 5 && Math.abs(py - y) < ch/2 + 5){
           // Draw an individual star.
+          x = x + (cw/2);
+          y = y + (ch/2);
+          // Make the stars white
           ctx.beginPath();
-          ctx.arc(x, y, 3, 0, Math.PI * 2, true);
+          ctx.arc(x - px, y - py, 3, 0, Math.PI * 2, true);
           ctx.closePath();
           ctx.fill();
+        }
         }
       }
 
@@ -108,6 +158,12 @@ function drawPlayer(ctx, ship, x, y) {
   else if (ship == 2) {
     ship2draw(ctx,x,y);
   }
+}
+
+function framerateDraw(ctx) {
+ctx.fillStyle = '#FFF';
+ctx.font = 'bold 10px sans-serif';
+ctx.fillText('FPS: ' + fps + '/' + maxfps, 5, 15);
 }
 
 window.addEventListener("load", game, true);
@@ -123,6 +179,9 @@ $(document.documentElement).keydown(function (event) {
   } else if (event.keyCode == 40) {
       downp = true;
   }
+  if (event.keyCode == 27) {
+      xstop = true;
+  }
 });
 //This handler detects when the keys are no longer being pressed
 $(document.documentElement).keyup(function (event) {
@@ -135,6 +194,9 @@ $(document.documentElement).keyup(function (event) {
       upp = false;
   } else if (event.keyCode == 40) {
       downp = false;
+  }
+  if (event.keyCode == 27) {
+      xstop = false;
   }
 });
 </script>

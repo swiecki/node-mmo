@@ -36,17 +36,25 @@ app.listen(3000, function(){
 app.get('/', function (req, res) {
   res.sendfile(__dirname + '/index.html');
 });
+//need to have map information then x and y become where the ship is on the map
+//but i do sub-tile movement so i have to decide how to store the map
+
 
 //need to create a new entity when client connects, broadcast this entity to all clients, who then store it and get feedback about it.
 var clientid = 0;
 var players = new Array();
+var messagecount = 0;
 io.sockets.on('connection', function (socket) {
-  var xstart = 70;
-  var ystart = 140;
+  var worldx = 0;
+  var worldy = 0;
+  var xvel = 0;
+  var yvel = 0;
+  var xacc = 0;
+  var yacc = 0;
   var spaceship_style = Math.floor(Math.random()*(2)+1);
-  socket.emit('newstart', { id: clientid, ship: spaceship_style, x: xstart, y: ystart, currentplayers: players});
-  socket.broadcast.emit('newguy', { id: clientid, ship: spaceship_style, x: xstart, y: ystart });
-  players[clientid] = {id: clientid, ship: spaceship_style, x: xstart, y: ystart };
+  socket.emit('newstart', { id: clientid, ship: spaceship_style, x: worldx, y: worldy, currentplayers: players});
+  socket.broadcast.emit('newguy', { id: clientid, ship: spaceship_style, x: worldx, y: worldy });
+  players[clientid] = {id: clientid, ship: spaceship_style, x: worldx, y: worldy, xv : xvel, xa : xacc, yv: yvel, ya: yacc };
   socket.id = clientid;
   clientid ++;
   
@@ -56,18 +64,45 @@ io.sockets.on('connection', function (socket) {
     socket.broadcast.emit('removeplayer', { id: socket.id });
 });
 
-  socket.on('movement', function (data) {
-    if (data.up) players[data.id].y -= 10;
-    if (data.down) players[data.id].y += 10;
-    if (data.left) players[data.id].x -= 10;
-    if (data.right) players[data.id].x += 10;
+  socket.on('dataupdate', function (data) {
+    messagecount ++;
+    console.log(messagecount);
+    if (data.up && !data.down && !data.left && !data.right) players[data.id].ya = -1;
+    if (data.down && !data.up && !data.left && !data.right) players[data.id].ya = 1;
+    if (data.left && !data.up && !data.down && !data.right) players[data.id].xa = -1;
+    if (data.right && !data.up && !data.down && !data.left) players[data.id].xa = 1;
+    if (data.up && data.left && !data.down && !data.right) {players[data.id].xa = -1; players[data.id].ya = -1;}
+    if (data.up && data.right && !data.down && !data.left) {players[data.id].xa = 1;players[data.id].ya = -1;}
+    if (data.down && data.left && !data.up && !data.right) {players[data.id].xa =-1;players[data.id].ya = 1;}
+    if (data.down && data.right && !data.up && !data.left) {players[data.id].xa = 1; players[data.id].ya = 1;}
+    if (data.xpressed) {
+      players[data.id].x = 0;
+      players[data.id].y = 0;
+      players[data.id].xv = 0;
+      players[data.id].xa = 0;
+      players[data.id].yv = 0;
+      players[data.id].ya = 0;
+    }
     update(players[data.id].id, players[data.id].x, players[data.id].y);
   });
 
-  var update = function(id, x, y) {
-  players[id].x = x;
-  players[id].y = y;
-  socket.emit('update', players[id]);
-  socket.broadcast.emit('update', players[id]);
+  var update = function(id) {
+    var maxspeed = 20;
+    if (players[id].xv > maxspeed) players[id].xv = maxspeed;
+    if (players[id].xv < -maxspeed) players[id].xv = -maxspeed;
+    if (players[id].yv > maxspeed) players[id].yv = maxspeed;
+    if (players[id].yv < -maxspeed) players[id].yv = -maxspeed;
+    var magnitude = Math.sqrt(Math.pow(players[id].xv, 2) + Math.pow(players[id].yv, 2));
+    if (magnitude > maxspeed){
+        players[id].xv = Math.floor(players[id].xv * .85);
+        players[id].yv = Math.floor(players[id].yv * .85);
+    }
+    players[id].xv += players[id].xa;
+    players[id].yv += players[id].ya;
+    players[id].xa = 0;
+    players[id].ya = 0;
+    players[id].x += players[id].xv;
+    players[id].y += players[id].yv;
+    io.sockets.emit('update', players[id]);
   };
 });
