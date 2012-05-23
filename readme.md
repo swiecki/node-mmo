@@ -6,6 +6,12 @@ This is a very simple experiment in socketIO that allows multiple simulataneous 
 TODO
 ----
 
+Add libraries for physics, more advanced fps monitoring, etc:
+https://github.com/gladiusjs/html5-game-template/wiki/game-library-volo-compatibility
+https://github.com/kripken/box2d.js/
+https://github.com/mrdoob/stats.js/
+https://github.com/batiste/sprite.js/
+
 Switch out a single array for data and rendering for two arrays- one that has complete data (or an object) and an array that is modified every time someone disconnects or connects that has easy rendering data in a way that is fast to iterate through.
 
 Make the starfield generated on the server and passed through on connection.
