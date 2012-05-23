@@ -12,6 +12,8 @@ Come up with a faster solutuion for generating starfield. Perhaps background fie
 
 Add parallax starfields.
 
+Player identification- names above ships.
+
 Add a directional pointer that points in the direction of an object- could start as a social feature, but this can be the beginning for quests and stuff.
 
 Add more ships!
