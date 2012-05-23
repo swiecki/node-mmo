@@ -1,8 +1,33 @@
 body {
+  background-color:#0f0f0f;
   padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
 }
-
-a {
-  color: #00B7FF;
+div.container {
+  margin:auto;
+  width:1000px;
+}
+canvas {
+  display:inline;
+}
+ul#chatlist {
+  float:right;
+  display:inline;
+  background:#eee;
+  height:450px;
+  overflow:auto;
+  list-style:none;
+  padding:5px 0 5px 0;
+  background:#000;
+  color:#efefef;
+}
+ul#chatlist li {
+  width:450px;
+}
+form#chat {
+  float:left;
+  display:block;
+}
+input#chattext {
+  width:500px;
 }

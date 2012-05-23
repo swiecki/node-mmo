@@ -28,9 +28,11 @@ app.configure('production', function(){
 });
 
 // Routes
+var starlist;
 
 app.listen(3000, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+  starlist = initiateStars(1600, 1600);
 });
 
 app.get('/', function (req, res) {
@@ -39,11 +41,12 @@ app.get('/', function (req, res) {
 //need to have map information then x and y become where the ship is on the map
 //but i do sub-tile movement so i have to decide how to store the map
 
+var players = new Array();
+var messagecount = 0;
+var maxShipSpeed = [0,20,30];
 
 //need to create a new entity when client connects, broadcast this entity to all clients, who then store it and get feedback about it.
 var clientid = 0;
-var players = new Array();
-var messagecount = 0;
 io.sockets.on('connection', function (socket) {
   var worldx = 0;
   var worldy = 0;
@@ -52,8 +55,11 @@ io.sockets.on('connection', function (socket) {
   var xacc = 0;
   var yacc = 0;
   var spaceship_style = Math.floor(Math.random()*(2)+1);
-  socket.emit('newstart', { id: clientid, ship: spaceship_style, x: worldx, y: worldy, currentplayers: players});
+  //set up the new player
+  socket.emit('newstart', { id: clientid, slist:starlist, ship: spaceship_style, x: worldx, y: worldy, currentplayers: players});
+  //tell everyone about the new player
   socket.broadcast.emit('newguy', { id: clientid, ship: spaceship_style, x: worldx, y: worldy });
+  //add the player to the list of players
   players[clientid] = {id: clientid, ship: spaceship_style, x: worldx, y: worldy, xv : xvel, xa : xacc, yv: yvel, ya: yacc };
   socket.id = clientid;
   clientid ++;
@@ -62,7 +68,11 @@ io.sockets.on('connection', function (socket) {
     players.splice(socket.id, 1, []);
     socket.emit('removeplayer', { id: socket.id });
     socket.broadcast.emit('removeplayer', { id: socket.id });
-});
+  });
+  
+  socket.on('chatmessagesend', function (data) {
+    socket.broadcast.emit('chatmessageresponse', { id: data.id, msg: data.message });
+  });
 
   socket.on('dataupdate', function (data) {
     messagecount ++;
@@ -87,7 +97,8 @@ io.sockets.on('connection', function (socket) {
   });
 
   var update = function(id) {
-    var maxspeed = 20;
+    if (players[id].hasOwnProperty("xv")){
+    var maxspeed = maxShipSpeed[players[id].ship];
     if (players[id].xv > maxspeed) players[id].xv = maxspeed;
     if (players[id].xv < -maxspeed) players[id].xv = -maxspeed;
     if (players[id].yv > maxspeed) players[id].yv = maxspeed;
@@ -104,5 +115,38 @@ io.sockets.on('connection', function (socket) {
     players[id].x += players[id].xv;
     players[id].y += players[id].yv;
     io.sockets.emit('update', players[id]);
+   }
   };
 });
+
+//TODO: move star generation logic to the server, have it pass the array to the client upon connection
+function initiateStars(w,h) {
+  var temparray = new Array();
+  var numStars = 100000;
+  // Generate numStars stars, with a quarter in each quadrant. (0,0 is the world centerpoint)
+  for (i = 0; i <= numStars/4; i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * 10)-1));
+    var y = Math.floor(Math.random() * ((h * 10)-1));
+    temparray[i] = [x,y];
+  }
+  for (i = (numStars/4 + 1); i <= numStars/2; i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * -10)-1));
+    var y = Math.floor(Math.random() * ((h * 10)-1));
+    temparray[i] = [x,y];
+  }
+  for (i = (numStars/2 + 1); i <= 3*(numStars/4); i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * 10)-1));
+    var y = Math.floor(Math.random() * ((h * -10)-1));
+    temparray[i] = [x,y];
+  }
+  for (i = (3*(numStars/4) + 1); i <= numStars; i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * -10)-1));
+    var y = Math.floor(Math.random() * ((h * -10)-1));
+    temparray[i] = [x,y];
+  }
+  return temparray;
+}
