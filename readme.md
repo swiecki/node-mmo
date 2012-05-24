@@ -8,17 +8,17 @@ This is a very simple experiment in socketIO that allows multiple simulataneous 
 TODO
 ----
 
-Come up with a faster solutuion for generating starfield. Perhaps background field could be generated on the client and move in parallax to the foreground field that is generated on the server and is the same for everyone.
-
-Add parallax starfields.
-
-Player identification- names above ships.
-
 Add a directional pointer that points in the direction of an object- could start as a social feature, but this can be the beginning for quests and stuff.
 
-Add more ships!
+Make rendering independent of game logic- right now it updates only when it receieves the request. Have it update anyways, and only provide rendering information on request.
 
-Lisence terms
+Refine interface- chat takes up too much of the screen right now.
+
+Make something cool happen after the boundaries- either deep space message, trigger a new environment, or teleport all the way across the map, or something.
+
+Add more ships with different movement speeds and levels, maybe make the player get different ships once they level.
+
+License terms
 -------------
 
 This software is available under the MIT "Expat" License:

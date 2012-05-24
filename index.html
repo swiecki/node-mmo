@@ -6,8 +6,9 @@
 </head>
 <body>
   <div class="container">
-    <canvas id="game" style="border: 1px solid #000;" height="500" width="500">Your browser doesn't support canvas</canvas>
+    <canvas id="game" style="border: 1px solid #000;" height="700" width="700">Your browser doesn't support canvas</canvas>
     <ul id="chatlist">
+      <h2>Text Chat</h2>
       <li>You have joined chat.</li>
     <ul>
   </div>
@@ -15,6 +16,7 @@
     <input id="chattext" type="text" maxlength="75">
     <input id="send" type="submit" value="send">
   </form>
+  
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -30,7 +32,6 @@ var ship;
 var players = new Array();
 var upp = false, downp = false, leftp = false, rightp = false, xstop = false;
 var starlist;
-
 
 socket.on('newstart', function (data) {
   x = data.x;
@@ -53,7 +54,7 @@ socket.on('removeplayer', function (data) {
   players.splice(data.id, 1, []);
 });
 socket.on('chatmessageresponse', function (data) {
-  $("#chatlist").append('<li>User ' + data.id + ' said: ' + data.msg + '</li>');
+  $("#chatlist").append('<li>Player ' + data.id + ' said: ' + data.msg + '</li>');
   $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);
 });
 
@@ -70,6 +71,19 @@ function game() {
   var context = canvas.getContext('2d');
   var context_width = canvas.width;
   var context_height = canvas.height;
+  
+  //prerender complex stars
+  var s_canvas = document.createElement('canvas');
+  s_canvas.width = 39;
+  s_canvas.height = 32;
+  var s_context = s_canvas.getContext('2d');
+  var img = new Image();
+  img.onload = function(){
+    s_context.drawImage(img,0,0);
+  }
+  img.src = 'images/star1.png';
+  
+  var backgroundstars = initiateStars(context_width, context_height);
   var gameloop = setInterval(function() {
   //fps counter
   stats.begin();
@@ -78,7 +92,7 @@ function game() {
   //reset canvas in between each frame, paint it black for space
   context.fillStyle = 'black';
   context.fillRect(0, 0, context_width, context_height);
-  drawAll(context, starlist, context_width, context_height);
+  drawAll(context, s_canvas, context_width, context_height, backgroundstars);
   
   //fps counter
   stats.end();
@@ -93,50 +107,79 @@ function updateAll() {
   //}
 }
   
-function drawAll(context, starlist, cw, ch) {
+function drawAll(context, s_canvas, cw, ch, bgstars) {
   //these are needed because the 0,0 of the ship sprite is the upper left corner, not the center
   var xadjust = cw/2 - 24;
   var yadjust = ch/2 - 22;
-  stars(context, starlist, players[myid].x, players[myid].y, cw, ch);
-
+  bgstarsdraw(context, players[myid].x, players[myid].y, cw, ch, bgstars);
+  stars(context, s_canvas, players[myid].x, players[myid].y, cw, ch);
   //draw other players-- this has to be changed so they are drawn in relation to the player's current position
   for (var playerid in players) {
     if (players[playerid].x != null && playerid != myid) {
+      drawPlayerName(context, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, playerid, players[playerid].ship);
+      
       drawPlayer(context, players[playerid].ship, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y);
     }
   }
-  
   //draw the player in the middle of the screen
   drawPlayer(context, players[myid].ship, xadjust, yadjust);
 }
 
-function stars(ctx, starlist, px, py, cw, ch) {
+function stars(ctx, s_canvas, px, py, cw, ch) {
+        for (var i in starlist) {
+          var x = starlist[i][0];
+          var y = starlist[i][1];
+        //check if star would be within view field
+        if (Math.abs(px - x) < cw/2 + 39 && Math.abs(py - y) < ch/2 + 39){
+          //transform coords from world coordinate system to pixel coordinate system
+          x = x + (cw/2);
+          y = y + (ch/2);
+          //old code makes a circle, new code draws pre-rendered image
+          //ctx.arc(x - px, y - py, 6, 0, Math.PI * 2, true);
+          ctx.drawImage(s_canvas,x - px, y - py);
+        }
+        }
+}
+
+function bgstarsdraw(ctx, px, py, cw, ch, starlist) {
         for (var i in starlist) {
           var x = starlist[i][0];
           var y = starlist[i][1];
           // Make the stars white
           ctx.fillStyle = "white";
         //check if star would be within view field
-        if (Math.abs(px - x) < cw/2 + 5 && Math.abs(py - y) < ch/2 + 5){
+        if (Math.abs(px/1.5 - x) < cw/2 + 5 && Math.abs(py/1.5 - y) < ch/2 + 5){
           //transform coords from world coordinate system to pixel coordinate system
           x = x + (cw/2);
           y = y + (ch/2);
           ctx.beginPath();
-          ctx.arc(x - px, y - py, 3, 0, Math.PI * 2, true);
+          //old code makes a circle, new code draws pre-rendered image
+          ctx.arc(x - px/1.5, y - py/1.5, 2, 0, Math.PI * 2, true);
           ctx.closePath();
           ctx.fill();
         }
         }
-      }
+}
 
 function drawPlayer(ctx, ship, x, y) {
-  var context = ctx; 
   if (ship == 1) {
     ship1draw(ctx,x,y);
   }
   else if (ship == 2) {
     ship2draw(ctx,x,y);
   }
+}
+
+function drawPlayerName(ctx, x, y, id, ship) {
+    var string = "Player " + id;
+    ctx.font = 'bold 10px Arial'
+    if (ship == 1){
+      ctx.fillText(string, x+4, y-4);
+    }
+    else if (ship == 2) {
+      ctx.fillText(string, x+2, y-3);
+    }
+    
 }
 
 window.addEventListener("load", game, true);
@@ -181,6 +224,37 @@ $("#chat").submit(function(event) {
   $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);*/
   socket.emit('chatmessagesend', { id: myid, message: value });
 });
+
+function initiateStars(w,h) {
+  var temparray = new Array();
+  var numStars = 10000;
+  // Generate numStars stars, with a quarter in each quadrant. (0,0 is the world centerpoint)
+  for (i = 0; i <= numStars/4; i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * 10)-1));
+    var y = Math.floor(Math.random() * ((h * 10)-1));
+    temparray[i] = [x,y];
+  }
+  for (i = (numStars/4 + 1); i <= numStars/2; i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * -10)-1));
+    var y = Math.floor(Math.random() * ((h * 10)-1));
+    temparray[i] = [x,y];
+  }
+  for (i = (numStars/2 + 1); i <= 3*(numStars/4); i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * 10)-1));
+    var y = Math.floor(Math.random() * ((h * -10)-1));
+    temparray[i] = [x,y];
+  }
+  for (i = (3*(numStars/4) + 1); i <= numStars; i++) {
+    // Get random positions for stars.
+    var x = Math.floor(Math.random() * ((w * -10)-1));
+    var y = Math.floor(Math.random() * ((h * -10)-1));
+    temparray[i] = [x,y];
+  }
+  return temparray;
+}
 </script>
 </body>
 </html>

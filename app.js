@@ -28,11 +28,11 @@ app.configure('production', function(){
 });
 
 // Routes
-var starlist;
+var bigstarlist;
 
 app.listen(3000, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
-  starlist = initiateStars(1600, 1600);
+  bigstarlist = initiateStars(1600, 1600);
 });
 
 app.get('/', function (req, res) {
@@ -56,7 +56,7 @@ io.sockets.on('connection', function (socket) {
   var yacc = 0;
   var spaceship_style = Math.floor(Math.random()*(2)+1);
   //set up the new player
-  socket.emit('newstart', { id: clientid, slist:starlist, ship: spaceship_style, x: worldx, y: worldy, currentplayers: players});
+  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: spaceship_style, x: worldx, y: worldy, currentplayers: players});
   //tell everyone about the new player
   socket.broadcast.emit('newguy', { id: clientid, ship: spaceship_style, x: worldx, y: worldy });
   //add the player to the list of players
@@ -114,15 +114,16 @@ io.sockets.on('connection', function (socket) {
     players[id].ya = 0;
     players[id].x += players[id].xv;
     players[id].y += players[id].yv;
+    
+    //boundaries
+    //if (players[id].y < -10000)
     io.sockets.emit('update', players[id]);
    }
   };
 });
-
-//TODO: move star generation logic to the server, have it pass the array to the client upon connection
 function initiateStars(w,h) {
   var temparray = new Array();
-  var numStars = 100000;
+  var numStars = 10000;
   // Generate numStars stars, with a quarter in each quadrant. (0,0 is the world centerpoint)
   for (i = 0; i <= numStars/4; i++) {
     // Get random positions for stars.
