@@ -32,11 +32,13 @@ var ship;
 var players = new Array();
 var upp = false, downp = false, leftp = false, rightp = false, xstop = false;
 var starlist;
+var waypoint = {x:0, y:0};
 
 socket.on('newstart', function (data) {
   x = data.x;
   y = data.y;
   starlist = data.slist;
+  waypoint = data.wp;
   myid = data.id;
   ship = data.ship;
   players = data.currentplayers;
@@ -123,6 +125,7 @@ function drawAll(context, s_canvas, cw, ch, bgstars) {
   }
   //draw the player in the middle of the screen
   drawPlayer(context, players[myid].ship, xadjust, yadjust);
+  drawWaypoint(context, players[myid].ship, players[myid].x, players[myid].y, cw, ch);
 }
 
 function stars(ctx, s_canvas, px, py, cw, ch) {
@@ -254,6 +257,41 @@ function initiateStars(w,h) {
     temparray[i] = [x,y];
   }
   return temparray;
+}
+function drawWaypoint(ctx, ship, x, y, cw, ch) {
+  var distance = Math.sqrt(Math.pow(x-waypoint.x, 2) + Math.pow(y-waypoint.y,2));
+  var moddist = (200* Math.PI) / distance;
+  if (y > waypoint.y && x > waypoint.x) {
+    var fraction = (y-waypoint.y)/(x-waypoint.x);
+    var pureangle = Math.atan(fraction) + Math.PI;
+    var angle1 = pureangle - moddist;
+    var angle2 = pureangle + moddist;
+  }
+  if (waypoint.y > y && waypoint.x > x) {
+    var fraction = (waypoint.y - y)/(waypoint.x - x);
+    var pureangle = Math.atan(fraction);
+    var angle1 = pureangle - moddist;
+    var angle2 = pureangle + moddist;
+  }
+  if (y > waypoint.y && waypoint.x > x) {
+    var fraction = (y - waypoint.y)/(waypoint.x - x);
+    var pureangle = Math.atan(fraction) * -1;
+    var angle1 = pureangle - moddist;
+    var angle2 = pureangle + moddist;
+  }
+  if (waypoint.y > y && x > waypoint.x) {
+    var fraction = (waypoint.y - y)/(x - waypoint.x);
+    var pureangle = (Math.atan(fraction) + Math.PI) * -1;
+    var angle1 = pureangle - moddist;
+    var angle2 = pureangle + moddist;
+
+  }
+  // Increase line width
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.strokeStyle = "rgb(255, 209, 117)";//cool color, should use later: 0,162,232
+  ctx.arc(cw/2, ch/2 + 7, 40, angle1, angle2, false);
+  ctx.stroke();
 }
 </script>
 </body>

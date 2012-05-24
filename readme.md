@@ -12,11 +12,11 @@ Add a directional pointer that points in the direction of an object- could start
 
 Make rendering independent of game logic- right now it updates only when it receieves the request. Have it update anyways, and only provide rendering information on request.
 
-Refine interface- chat takes up too much of the screen right now.
-
 Make something cool happen after the boundaries- either deep space message, trigger a new environment, or teleport all the way across the map, or something.
 
 Add more ships with different movement speeds and levels, maybe make the player get different ships once they level.
+
+Idea for gameplay: you are a lifeboat. save people in space. You have to go around to waypoints to save them, but you also have limited carrying capacity so you have to go back to the mothership. You could also have limited fuel, and can run out if you don't refill at the mothership, but ships can refuel each other at no cost.
 
 License terms
 -------------
