@@ -54,13 +54,14 @@ io.sockets.on('connection', function (socket) {
   var yvel = 0;
   var xacc = 0;
   var yacc = 0;
+  var waypoint = {x:500, y:500, xp:5};
   var spaceship_style = Math.floor(Math.random()*(2)+1);
   //set up the new player
-  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: spaceship_style, x: worldx, y: worldy, currentplayers: players});
+  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: spaceship_style, x: worldx, y: worldy, wp:waypoint, xp: 0, level: 1, currentplayers: players});
   //tell everyone about the new player
   socket.broadcast.emit('newguy', { id: clientid, ship: spaceship_style, x: worldx, y: worldy });
   //add the player to the list of players
-  players[clientid] = {id: clientid, ship: spaceship_style, x: worldx, y: worldy, xv : xvel, xa : xacc, yv: yvel, ya: yacc };
+  players[clientid] = {id: clientid, ship: spaceship_style, x: worldx, y: worldy, xv : xvel, xa : xacc, yv: yvel, ya: yacc, wp:waypoint, xp:0, level:1 };
   socket.id = clientid;
   clientid ++;
   
@@ -75,8 +76,10 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('dataupdate', function (data) {
+    //log packets sent by frame updates
     messagecount ++;
     console.log(messagecount);
+    //adjust accelleration based on if buttons are held down
     if (data.up && !data.down && !data.left && !data.right) players[data.id].ya = -1;
     if (data.down && !data.up && !data.left && !data.right) players[data.id].ya = 1;
     if (data.left && !data.up && !data.down && !data.right) players[data.id].xa = -1;
@@ -85,19 +88,34 @@ io.sockets.on('connection', function (socket) {
     if (data.up && data.right && !data.down && !data.left) {players[data.id].xa = 1;players[data.id].ya = -1;}
     if (data.down && data.left && !data.up && !data.right) {players[data.id].xa =-1;players[data.id].ya = 1;}
     if (data.down && data.right && !data.up && !data.left) {players[data.id].xa = 1; players[data.id].ya = 1;}
+    //define reset button (default escape)
     if (data.xpressed) {
-      players[data.id].x = 0;
-      players[data.id].y = 0;
+      players[data.id].x = 500;
+      players[data.id].y = 1000;
       players[data.id].xv = 0;
       players[data.id].xa = 0;
       players[data.id].yv = 0;
       players[data.id].ya = 0;
     }
+    
+    //WAYPOINT calculations
+    if(Math.abs(players[data.id].x-players[data.id].wp.x) < 100 && Math.abs(players[data.id].y-players[data.id].wp.y) < 100){
+      currentw = players[data.id].wp;
+      players[data.id].xp += currentw.xp;
+      randomw = {x:1000,y:-1000, xp:10};
+      players[data.id].wp = randomw;
+      waypointdata = {justearnedxp:currentw.xp, xp:randomw.xp, msg:"Good work!", level:1, newx:randomw.x, newy:randomw.y};
+      socket.emit('newwaypoint', waypointdata);
+    }
+    
+    //do more in depth movement calculations
     update(players[data.id].id, players[data.id].x, players[data.id].y);
   });
 
   var update = function(id) {
+    //first verify that we don't have a shitstorm on our hands
     if (players[id].hasOwnProperty("xv")){
+    //next get how fast this ship can go and make sure it's not going any faster
     var maxspeed = maxShipSpeed[players[id].ship];
     if (players[id].xv > maxspeed) players[id].xv = maxspeed;
     if (players[id].xv < -maxspeed) players[id].xv = -maxspeed;

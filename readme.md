@@ -5,18 +5,39 @@ This is a very simple experiment in socketIO that allows multiple simulataneous 
 
 ![screenshot.png](https://github.com/swiecki/node-mmo/raw/master/screenshot.png "Screenshot")
 
+Gameplay
+--------
+
+Idea for gameplay: you are a lifeboat. save people in space. You have to go around to waypoints to save them, but you also have limited carrying capacity so you have to go back to the mothership. You could also have limited fuel, and can run out if you don't refill at the mothership, but ships can refuel each other at no cost.
+
 TODO
 ----
 
-Add a directional pointer that points in the direction of an object- could start as a social feature, but this can be the beginning for quests and stuff.
+Add waypoint generation system, generates waypoints based on random distance. XP per waypoint is based on distance from player at generation. Upon completion, level and xp are recalculated. Attach a random message for flavor to each waypoint that is shown upon completion.
 
-Make rendering independent of game logic- right now it updates only when it receieves the request. Have it update anyways, and only provide rendering information on request.
+Make rendering independent of game logic- right now it updates only when it receieves the request. Have it update anyways, and only provide rendering information on request. Goes hand in hand with: Switch out a single array for data and rendering for two arrays- one that has complete data (or an object) and an array that is modified every time someone disconnects or connects that has easy rendering data in a way that is fast to iterate through.
 
 Make something cool happen after the boundaries- either deep space message, trigger a new environment, or teleport all the way across the map, or something.
 
 Add more ships with different movement speeds and levels, maybe make the player get different ships once they level.
 
-Idea for gameplay: you are a lifeboat. save people in space. You have to go around to waypoints to save them, but you also have limited carrying capacity so you have to go back to the mothership. You could also have limited fuel, and can run out if you don't refill at the mothership, but ships can refuel each other at no cost.
+
+
+~~Space physics- drifting and acceleration-based gameplay instead of position based gameplay~~
+
+~~Add chat functionality.~~
+
+~~Add parallax starfields.~~
+
+~~Add a directional pointer that points in the direction of an object- could start as a social feature, but this can be the beginning for quests and stuff.~~
+
+~~Add stats library for more advanced fps monitoring~~
+
+~~Come up with a faster solutuion for generating starfield. Perhaps background field could be generated on the client and move in parallax to the foreground field that is generated on the server and is the same for everyone.~~
+
+~~Player identification- names above ships.~~
+
+~~Refine interface- chat takes up too much of the screen right now.~~
 
 License terms
 -------------

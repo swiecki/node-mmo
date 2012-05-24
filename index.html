@@ -25,14 +25,14 @@ var socket = io.connect('http://localhost');
 <script src="drawships.js"></script>
 <script src="Stats.js"></script>
 <script>
-var x = 70;
-var y = 70;
+var x = 0;
+var y = 0;
 var myid = 0;
 var ship;
 var players = new Array();
 var upp = false, downp = false, leftp = false, rightp = false, xstop = false;
 var starlist;
-var waypoint = {x:0, y:0};
+var waypoint;
 
 socket.on('newstart', function (data) {
   x = data.x;
@@ -42,15 +42,24 @@ socket.on('newstart', function (data) {
   myid = data.id;
   ship = data.ship;
   players = data.currentplayers;
-  players[myid] = { id: myid, ship: ship, x: x, y: y };
+  players[myid] = { id: myid, ship: ship, x: x, y: y, level:0, xp:0, wp:waypoint};
 });
 socket.on('newguy', function (data) {
   players[data.id] = ({id: data.id, ship: data.ship, x: data.x, y: data.y });
   });
 socket.on('update', function (data) {
-   x = data.x;
-   y = data.y;
+  x = data.x;
+  y = data.y;
   players[data.id] = { id: data.id, ship: data.ship, x: data.x, y: data.y };
+  });
+  
+socket.on('newwaypoint', function (data) {
+  console.log('test');
+  justearned = data.justearnedxp;
+  message = data.msg;
+  waypoint.x = data.newx;
+  waypoint.y = data.newy; 
+  players[myid] = { id: myid, ship: data.ship, x: data.x, y: data.y, level:data.level, xp: data.xp };
   });
 socket.on('removeplayer', function (data) {
   players.splice(data.id, 1, []);
