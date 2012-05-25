@@ -2,11 +2,11 @@
 /**
  * Module dependencies.
  */
-
+var debug = false;
 var express = require('express');
 
 var app = module.exports = express.createServer()
-  , io = require('socket.io').listen(app);
+  , io = require('socket.io').listen(app, { log: debug});
 
 // Configuration
 
@@ -29,6 +29,7 @@ app.configure('production', function(){
 
 // Routes
 var bigstarlist;
+var socketlist = new Array();
 
 app.listen(3000, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
@@ -43,18 +44,20 @@ app.get('/', function (req, res) {
 
 var players = new Array();
 var messagecount = 0;
+
+//ship speeds, index responds to ship type
 var maxShipSpeed = [0,20,30];
 
 //need to create a new entity when client connects, broadcast this entity to all clients, who then store it and get feedback about it.
 var clientid = 0;
 io.sockets.on('connection', function (socket) {
-  var worldx = 0;
-  var worldy = 0;
-  var xvel = 0;
-  var yvel = 0;
-  var xacc = 0;
-  var yacc = 0;
-  var waypoint = {x:500, y:500, xp:5};
+  var worldx = 0,
+      worldy = 0,
+      xvel = 0,
+      yvel = 0,
+      xacc = 0,
+      yacc = 0,
+      waypoint = {x:500, y:500, xp:5};
   var spaceship_style = Math.floor(Math.random()*(2)+1);
   //set up the new player
   socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: spaceship_style, x: worldx, y: worldy, wp:waypoint, xp: 0, level: 1, currentplayers: players});
@@ -62,21 +65,21 @@ io.sockets.on('connection', function (socket) {
   socket.broadcast.emit('newguy', { id: clientid, ship: spaceship_style, x: worldx, y: worldy });
   //add the player to the list of players
   players[clientid] = {id: clientid, ship: spaceship_style, x: worldx, y: worldy, xv : xvel, xa : xacc, yv: yvel, ya: yacc, wp:waypoint, xp:0, level:1 };
-  socket.id = clientid;
+  //investigate what's wrong with this
+  //socket.id = clientid;
   clientid ++;
   
   socket.on('disconnect', function (data) {
     players.splice(socket.id, 1, []);
-    socket.emit('removeplayer', { id: socket.id });
-    socket.broadcast.emit('removeplayer', { id: socket.id });
+    io.sockets.emit('removeplayer', { id: socket.id });
   });
   
   socket.on('chatmessagesend', function (data) {
-    socket.broadcast.emit('chatmessageresponse', { id: data.id, msg: data.message });
+    io.sockets.emit('chatmessageresponse', { id: data.id, msg: data.message });
   });
 
   socket.on('dataupdate', function (data) {
-    socket.emit('chatmessageresponse', { id: 1, msg: "test" });
+    //socket.emit('chatmessageresponse', { id: 1, msg: "test" });
     //WAYPOINT calculations
     if(Math.abs(players[data.id].x-players[data.id].wp.x) < 200 && Math.abs(players[data.id].y-players[data.id].wp.y) < 200){
       currentw = players[data.id].wp;
@@ -97,13 +100,14 @@ io.sockets.on('connection', function (socket) {
       randomw = {x:randx[cx], y:randy[cy], xp: xpgen};
       console.log(xpgen);
       players[data.id].wp = randomw;
-      //for whatever reason, I can't just emit to the socket. I have to instead emit to all sockets. It's stupid.
-      io.sockets.emit('newwaypoint', { id:data.id, wp:randomw });
+      socket.emit('newwaypoint', { wp:randomw });
     }
     
     //log packets sent by frame updates
+    if (debug){
     messagecount ++;
     console.log(messagecount);
+    }
     //adjust accelleration based on if buttons are held down
     if (data.up && !data.down && !data.left && !data.right) players[data.id].ya = -1;
     if (data.down && !data.up && !data.left && !data.right) players[data.id].ya = 1;

@@ -47,12 +47,15 @@ socket.on('newstart', function (data) {
 });
 socket.on('newguy', function (data) {
   players[data.id] = ({id: data.id, ship: data.ship, x: data.x, y: data.y });
-  });
+});
+socket.on('disconnect', function () {
+  alert('you were disconnected.');
+});
 socket.on('update', function (data) {
   //x = data.x;
   //y = data.y;
   players[data.id] = { id: data.id, ship: data.ship, x: data.x, y: data.y };
-  });
+});
 socket.on('removeplayer', function (data) {
   players.splice(data.id, 1, []);
 });
@@ -61,10 +64,8 @@ socket.on('chatmessageresponse', function (data) {
   $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);
 });
 socket.on('newwaypoint', function (data) {
-  if (data.id == myid){
     window.waypoint = data.wp;
     console.log('waypoint changed');
-  }
 });
 function game() {
   //fps counter next 2 lines
