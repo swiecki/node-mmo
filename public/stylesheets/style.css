@@ -1,7 +1,15 @@
+@font-face {
+    font-family: 'Gotham Medium';
+    src: url('Gotham-Medium.otf');
+}
+@font-face {
+    font-family: 'Gotham Bold';
+    src: url('Gotham-Bold.otf');
+}
 body {
   background-color:#0f0f0f;
   padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font: 14px "Gotham Medium", Helvetica, Arial, sans-serif;
 }
 div.container {
   margin:auto;

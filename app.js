@@ -76,6 +76,31 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('dataupdate', function (data) {
+    socket.emit('chatmessageresponse', { id: 1, msg: "test" });
+    //WAYPOINT calculations
+    if(Math.abs(players[data.id].x-players[data.id].wp.x) < 200 && Math.abs(players[data.id].y-players[data.id].wp.y) < 200){
+      currentw = players[data.id].wp;
+      players[data.id].xp += currentw.xp;
+      var randx = new Array();
+      var randy = new Array();
+      //generate new random waypoint
+      randx[0] = Math.floor(Math.random()*5001);
+      randx[1] = Math.floor(Math.random()*-5001);
+      randy[0] = Math.floor(Math.random()*5001);
+      randy[1] = Math.floor(Math.random()*-5001);
+
+      var cx = Math.floor(Math.random()*2);
+      var cy = Math.floor(Math.random()*2);
+      
+      var distance = Math.sqrt(Math.pow(players[data.id].x - randx[cx],2) + Math.pow(players[data.id].y - randx[cy],2));
+      var xpgen = Math.floor(Math.pow(distance, .25));
+      randomw = {x:randx[cx], y:randy[cy], xp: xpgen};
+      console.log(xpgen);
+      players[data.id].wp = randomw;
+      //for whatever reason, I can't just emit to the socket. I have to instead emit to all sockets. It's stupid.
+      io.sockets.emit('newwaypoint', { id:data.id, wp:randomw });
+    }
+    
     //log packets sent by frame updates
     messagecount ++;
     console.log(messagecount);
@@ -96,18 +121,7 @@ io.sockets.on('connection', function (socket) {
       players[data.id].xa = 0;
       players[data.id].yv = 0;
       players[data.id].ya = 0;
-    }
-    
-    //WAYPOINT calculations
-    if(Math.abs(players[data.id].x-players[data.id].wp.x) < 100 && Math.abs(players[data.id].y-players[data.id].wp.y) < 100){
-      currentw = players[data.id].wp;
-      players[data.id].xp += currentw.xp;
-      randomw = {x:1000,y:-1000, xp:10};
-      players[data.id].wp = randomw;
-      waypointdata = {justearnedxp:currentw.xp, xp:randomw.xp, msg:"Good work!", level:1, newx:randomw.x, newy:randomw.y};
-      socket.emit('newwaypoint', waypointdata);
-    }
-    
+    }   
     //do more in depth movement calculations
     update(players[data.id].id, players[data.id].x, players[data.id].y);
   });

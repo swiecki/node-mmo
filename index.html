@@ -16,7 +16,9 @@
     <input id="chattext" type="text" maxlength="75">
     <input id="send" type="submit" value="send">
   </form>
-  
+<!--preload fonts-->
+<div style="font-family: Gotham Medium;">.</div>
+<div style="font-family: Gotham Bold;">.</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -32,13 +34,12 @@ var ship;
 var players = new Array();
 var upp = false, downp = false, leftp = false, rightp = false, xstop = false;
 var starlist;
-var waypoint;
 
 socket.on('newstart', function (data) {
   x = data.x;
   y = data.y;
   starlist = data.slist;
-  waypoint = data.wp;
+  window.waypoint = data.wp;
   myid = data.id;
   ship = data.ship;
   players = data.currentplayers;
@@ -48,18 +49,9 @@ socket.on('newguy', function (data) {
   players[data.id] = ({id: data.id, ship: data.ship, x: data.x, y: data.y });
   });
 socket.on('update', function (data) {
-  x = data.x;
-  y = data.y;
+  //x = data.x;
+  //y = data.y;
   players[data.id] = { id: data.id, ship: data.ship, x: data.x, y: data.y };
-  });
-  
-socket.on('newwaypoint', function (data) {
-  console.log('test');
-  justearned = data.justearnedxp;
-  message = data.msg;
-  waypoint.x = data.newx;
-  waypoint.y = data.newy; 
-  players[myid] = { id: myid, ship: data.ship, x: data.x, y: data.y, level:data.level, xp: data.xp };
   });
 socket.on('removeplayer', function (data) {
   players.splice(data.id, 1, []);
@@ -68,7 +60,12 @@ socket.on('chatmessageresponse', function (data) {
   $("#chatlist").append('<li>Player ' + data.id + ' said: ' + data.msg + '</li>');
   $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);
 });
-
+socket.on('newwaypoint', function (data) {
+  if (data.id == myid){
+    window.waypoint = data.wp;
+    console.log('waypoint changed');
+  }
+});
 function game() {
   //fps counter next 2 lines
   var stats = new Stats();
@@ -104,6 +101,19 @@ function game() {
   context.fillStyle = 'black';
   context.fillRect(0, 0, context_width, context_height);
   drawAll(context, s_canvas, context_width, context_height, backgroundstars);
+  
+  
+  //should move this code to another place, also hook it up to fire only after level up
+  if (leveledup){
+    var gradient = context.createLinearGradient(0, 210, 0, 300);
+    gradient.addColorStop(0, "rgb(255, 255, 255)");
+    gradient.addColorStop(1, "rgb(80, 80, 80)");
+    context.fillStyle = gradient;
+    context.font = '48px Gotham Bold';
+    context.fillText("Congratulations!", context_width/2 - 200, context_height/2- 100);
+    context.font = '16px Gotham Bold';
+    context.fillText("You have reached level 5", context_width/2 - 100, context_height/2- 70);
+  }
   
   //fps counter
   stats.end();
@@ -184,16 +194,53 @@ function drawPlayer(ctx, ship, x, y) {
 
 function drawPlayerName(ctx, x, y, id, ship) {
     var string = "Player " + id;
-    ctx.font = 'bold 10px Arial'
+    ctx.font = '10px Gotham Medium'
     if (ship == 1){
       ctx.fillText(string, x+4, y-4);
     }
     else if (ship == 2) {
       ctx.fillText(string, x+2, y-3);
     }
-    
 }
-
+function drawWaypoint(ctx, ship, x, y, cw, ch) {
+  //var waypoint = window.waypoint;
+  var distance = Math.sqrt(Math.pow(x-waypoint.x, 2) + Math.pow(y-waypoint.y,2));
+  var moddist = (200* Math.PI) / distance;
+  if (y > waypoint.y && x > waypoint.x) {
+    var fraction = (y-waypoint.y)/(x-waypoint.x);
+    var pureangle = Math.atan(fraction) + Math.PI;
+    var angle1 = pureangle - moddist;
+    var angle2 = pureangle + moddist;
+  }
+  if (waypoint.y > y && waypoint.x > x) {
+    var fraction = (waypoint.y - y)/(waypoint.x - x);
+    var pureangle = Math.atan(fraction);
+    var angle1 = pureangle - moddist;
+    var angle2 = pureangle + moddist;
+  }
+  if (y > waypoint.y && waypoint.x > x) {
+    var fraction = (y - waypoint.y)/(waypoint.x - x);
+    var pureangle = Math.atan(fraction) * -1;
+    var angle1 = pureangle - moddist;
+    var angle2 = pureangle + moddist;
+  }
+  if (waypoint.y > y && x > waypoint.x) {
+    var fraction = (waypoint.y - y)/(x - waypoint.x);
+    var pureangle = (Math.atan(fraction) + Math.PI) * -1;
+    var angle1 = pureangle - moddist;
+    var angle2 = pureangle + moddist;
+  }
+  // Increase line width
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  //ctx.strokeStyle = "rgba(255, 209, 117,.7)";//cool color, should use later: 0,162,232
+  var gradient = ctx.createRadialGradient(cw/2, ch/2+7, 30, cw/2, ch/2+7, 50);
+  gradient.addColorStop(0, "rgb(241, 218, 54)");
+  gradient.addColorStop(1, "rgb(252, 227, 0)");
+  ctx.strokeStyle = gradient;
+  ctx.arc(cw/2, ch/2 + 7, 40, angle1, angle2, false);
+  ctx.stroke();
+}
 window.addEventListener("load", game, true);
 $(document.documentElement).keydown(function (event) {
   // handle cursor keys
@@ -266,41 +313,6 @@ function initiateStars(w,h) {
     temparray[i] = [x,y];
   }
   return temparray;
-}
-function drawWaypoint(ctx, ship, x, y, cw, ch) {
-  var distance = Math.sqrt(Math.pow(x-waypoint.x, 2) + Math.pow(y-waypoint.y,2));
-  var moddist = (200* Math.PI) / distance;
-  if (y > waypoint.y && x > waypoint.x) {
-    var fraction = (y-waypoint.y)/(x-waypoint.x);
-    var pureangle = Math.atan(fraction) + Math.PI;
-    var angle1 = pureangle - moddist;
-    var angle2 = pureangle + moddist;
-  }
-  if (waypoint.y > y && waypoint.x > x) {
-    var fraction = (waypoint.y - y)/(waypoint.x - x);
-    var pureangle = Math.atan(fraction);
-    var angle1 = pureangle - moddist;
-    var angle2 = pureangle + moddist;
-  }
-  if (y > waypoint.y && waypoint.x > x) {
-    var fraction = (y - waypoint.y)/(waypoint.x - x);
-    var pureangle = Math.atan(fraction) * -1;
-    var angle1 = pureangle - moddist;
-    var angle2 = pureangle + moddist;
-  }
-  if (waypoint.y > y && x > waypoint.x) {
-    var fraction = (waypoint.y - y)/(x - waypoint.x);
-    var pureangle = (Math.atan(fraction) + Math.PI) * -1;
-    var angle1 = pureangle - moddist;
-    var angle2 = pureangle + moddist;
-
-  }
-  // Increase line width
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.strokeStyle = "rgb(255, 209, 117)";//cool color, should use later: 0,162,232
-  ctx.arc(cw/2, ch/2 + 7, 40, angle1, angle2, false);
-  ctx.stroke();
 }
 </script>
 </body>
