@@ -13,7 +13,9 @@ Idea for gameplay: you are a lifeboat. save people in space. You have to go arou
 TODO
 ----
 
-Add waypoint generation system, generates waypoints based on random distance. XP per waypoint is based on distance from player at generation. Upon completion, level and xp are recalculated. Attach a random message for flavor to each waypoint that is shown upon completion.
+Rotate ships according to either their velocities or their acceleration (will probably be better to do a, but maybe harder?);
+
+Attach a random message for flavor to each waypoint that is shown upon completion.
 
 Make rendering independent of game logic- right now it updates only when it receieves the request. Have it update anyways, and only provide rendering information on request. Goes hand in hand with: Switch out a single array for data and rendering for two arrays- one that has complete data (or an object) and an array that is modified every time someone disconnects or connects that has easy rendering data in a way that is fast to iterate through.
 
@@ -21,7 +23,7 @@ Make something cool happen after the boundaries- either deep space message, trig
 
 Add more ships with different movement speeds and levels, maybe make the player get different ships once they level.
 
-
+~~Add waypoint generation system, generates waypoints based on random distance. XP per waypoint is based on distance from player at generation. Upon completion, level and xp are recalculated.~~
 
 ~~Space physics- drifting and acceleration-based gameplay instead of position based gameplay~~
 
