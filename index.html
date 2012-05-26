@@ -27,23 +27,20 @@ var socket = io.connect('http://localhost');
 <script src="drawships.js"></script>
 <script src="Stats.js"></script>
 <script>
-var x = 0;
-var y = 0;
 var myid = 0;
 var ship;
+var leveledUp = false;
 var players = new Array();
 var upp = false, downp = false, leftp = false, rightp = false, xstop = false;
 var starlist;
 
 socket.on('newstart', function (data) {
-  x = data.x;
-  y = data.y;
   starlist = data.slist;
   window.waypoint = data.wp;
   myid = data.id;
   ship = data.ship;
   players = data.currentplayers;
-  players[myid] = { id: myid, ship: ship, x: x, y: y, level:0, xp:0, wp:waypoint};
+  players[myid] = { id: myid, ship: ship, x: 0, y: 0, level:0, xp:0, wp:waypoint};
 });
 socket.on('newguy', function (data) {
   players[data.id] = ({id: data.id, ship: data.ship, x: data.x, y: data.y });
@@ -51,21 +48,32 @@ socket.on('newguy', function (data) {
 socket.on('disconnect', function () {
   alert('you were disconnected.');
 });
-socket.on('update', function (data) {
-  //x = data.x;
-  //y = data.y;
-  players[data.id] = { id: data.id, ship: data.ship, x: data.x, y: data.y };
+socket.on('update', function (data) {  
+  players[data.id].ship = data.ship;
+  players[data.id].x = data.x;
+  players[data.id].y = data.y;
 });
 socket.on('removeplayer', function (data) {
   players.splice(data.id, 1, []);
 });
 socket.on('chatmessageresponse', function (data) {
+  if (data.playermsg) {
   $("#chatlist").append('<li>Player ' + data.id + ' said: ' + data.msg + '</li>');
+  }
+  else {
+  $("#chatlist").append('<li>' + data.msg + '</li>');
+  }
   $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);
 });
 socket.on('newwaypoint', function (data) {
     window.waypoint = data.wp;
     console.log('waypoint changed');
+});
+socket.on('leveledup', function (data) {
+  console.log('fired!' + 'level is ' + data.level);
+  players[myid].level = data.level;
+  leveledUp = true;
+  setTimeout( function() {leveledUp = false;}, 5000);
 });
 function game() {
   //fps counter next 2 lines
@@ -75,6 +83,7 @@ function game() {
   stats.domElement.style.left = '0px';
   stats.domElement.style.top = '0px';
 	document.body.appendChild( stats.domElement );
+	
   // Get the canvas element and its drawing context
   var canvas = document.getElementById('game');
   var context = canvas.getContext('2d');
@@ -96,25 +105,11 @@ function game() {
   var gameloop = setInterval(function() {
   //fps counter
   stats.begin();
-
   updateAll();
   //reset canvas in between each frame, paint it black for space
   context.fillStyle = 'black';
   context.fillRect(0, 0, context_width, context_height);
   drawAll(context, s_canvas, context_width, context_height, backgroundstars);
-  
-  
-  //should move this code to another place, also hook it up to fire only after level up
-  if (leveledup){
-    var gradient = context.createLinearGradient(0, 210, 0, 300);
-    gradient.addColorStop(0, "rgb(255, 255, 255)");
-    gradient.addColorStop(1, "rgb(80, 80, 80)");
-    context.fillStyle = gradient;
-    context.font = '48px Gotham Bold';
-    context.fillText("Congratulations!", context_width/2 - 200, context_height/2- 100);
-    context.font = '16px Gotham Bold';
-    context.fillText("You have reached level 5", context_width/2 - 100, context_height/2- 70);
-  }
   
   //fps counter
   stats.end();
@@ -146,20 +141,21 @@ function drawAll(context, s_canvas, cw, ch, bgstars) {
   //draw the player in the middle of the screen
   drawPlayer(context, players[myid].ship, xadjust, yadjust);
   drawWaypoint(context, players[myid].ship, players[myid].x, players[myid].y, cw, ch);
+  drawLevelUp(context, cw, ch);
 }
 
 function stars(ctx, s_canvas, px, py, cw, ch) {
         for (var i in starlist) {
           var x = starlist[i][0];
           var y = starlist[i][1];
-        //check if star would be within view field
-        if (Math.abs(px - x) < cw/2 + 39 && Math.abs(py - y) < ch/2 + 39){
-          //transform coords from world coordinate system to pixel coordinate system
-          x = x + (cw/2);
-          y = y + (ch/2);
-          //old code makes a circle, new code draws pre-rendered image
-          //ctx.arc(x - px, y - py, 6, 0, Math.PI * 2, true);
-          ctx.drawImage(s_canvas,x - px, y - py);
+          //check if star would be within view field
+          if (Math.abs(px - x) < cw/2 + 39 && Math.abs(py - y) < ch/2 + 39){
+            //transform coords from world coordinate system to pixel coordinate system
+            x = x + (cw/2);
+            y = y + (ch/2);
+            //old code makes a circle, new code draws pre-rendered image
+            //ctx.arc(x - px, y - py, 6, 0, Math.PI * 2, true);
+            ctx.drawImage(s_canvas,x - px, y - py);
         }
         }
 }
@@ -242,6 +238,18 @@ function drawWaypoint(ctx, ship, x, y, cw, ch) {
   ctx.arc(cw/2, ch/2 + 7, 40, angle1, angle2, false);
   ctx.stroke();
 }
+function drawLevelUp(ctx, cw, ch) {
+  if (leveledUp){
+    var gradient = ctx.createLinearGradient(0, 210, 0, 300);
+    gradient.addColorStop(0, "rgb(255, 255, 255)");
+    gradient.addColorStop(1, "rgb(80, 80, 80)");
+    ctx.fillStyle = gradient;
+    ctx.font = '48px Gotham Bold';
+    ctx.fillText("Congratulations!", cw/2 - 200, ch/2- 100);
+    ctx.font = '16px Gotham Bold';
+    ctx.fillText("You have reached level " + players[myid].level, cw/2 - 100, ch/2- 70);
+  }
+}
 window.addEventListener("load", game, true);
 $(document.documentElement).keydown(function (event) {
   // handle cursor keys
@@ -280,9 +288,7 @@ $("#chat").submit(function(event) {
   event.preventDefault();
   var value = $("#chattext").val();
   $("#chattext").val('');
-  /*$("#chatlist").append('<li>User ' + myid + ' said: ' + value + '</li>');
-  $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);*/
-  socket.emit('chatmessagesend', { id: myid, message: value });
+  socket.emit('chatmessagesend', { id: myid, playermsg: true, msg: value });
 });
 
 function initiateStars(w,h) {

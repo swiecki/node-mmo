@@ -59,49 +59,39 @@ io.sockets.on('connection', function (socket) {
       yacc = 0,
       waypoint = {x:500, y:500, xp:5};
   var spaceship_style = Math.floor(Math.random()*(2)+1);
+  
   //set up the new player
   socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: spaceship_style, x: worldx, y: worldy, wp:waypoint, xp: 0, level: 1, currentplayers: players});
+  
   //tell everyone about the new player
   socket.broadcast.emit('newguy', { id: clientid, ship: spaceship_style, x: worldx, y: worldy });
+  
   //add the player to the list of players
   players[clientid] = {id: clientid, ship: spaceship_style, x: worldx, y: worldy, xv : xvel, xa : xacc, yv: yvel, ya: yacc, wp:waypoint, xp:0, level:1 };
-  //investigate what's wrong with this
-  //socket.id = clientid;
+  
+  //set id to be associated with socket
+  socket.set('identification', clientid);
   clientid ++;
   
   socket.on('disconnect', function (data) {
-    players.splice(socket.id, 1, []);
-    io.sockets.emit('removeplayer', { id: socket.id });
+    //remove socket by socketid on disconnect
+    socket.get('identification', function(err, id) {
+    players.splice(id, 1, []);
+    io.sockets.emit('removeplayer', { id: id });
+    });
   });
   
   socket.on('chatmessagesend', function (data) {
-    io.sockets.emit('chatmessageresponse', { id: data.id, msg: data.message });
+    console.log(data.playermsg);
+    console.log(data.msg);
+    console.log(data.id);
+    io.sockets.emit('chatmessageresponse', data);
   });
 
   socket.on('dataupdate', function (data) {
-    //socket.emit('chatmessageresponse', { id: 1, msg: "test" });
-    //WAYPOINT calculations
-    if(Math.abs(players[data.id].x-players[data.id].wp.x) < 200 && Math.abs(players[data.id].y-players[data.id].wp.y) < 200){
-      currentw = players[data.id].wp;
-      players[data.id].xp += currentw.xp;
-      var randx = new Array();
-      var randy = new Array();
-      //generate new random waypoint
-      randx[0] = Math.floor(Math.random()*5001);
-      randx[1] = Math.floor(Math.random()*-5001);
-      randy[0] = Math.floor(Math.random()*5001);
-      randy[1] = Math.floor(Math.random()*-5001);
-
-      var cx = Math.floor(Math.random()*2);
-      var cy = Math.floor(Math.random()*2);
-      
-      var distance = Math.sqrt(Math.pow(players[data.id].x - randx[cx],2) + Math.pow(players[data.id].y - randx[cy],2));
-      var xpgen = Math.floor(Math.pow(distance, .25));
-      randomw = {x:randx[cx], y:randy[cy], xp: xpgen};
-      console.log(xpgen);
-      players[data.id].wp = randomw;
-      socket.emit('newwaypoint', { wp:randomw });
-    }
+    //do waypoint calculations
+    var waypointDistance = 150;
+    waypointUpdate(players[data.id].id, waypointDistance);
     
     //log packets sent by frame updates
     if (debug){
@@ -127,9 +117,41 @@ io.sockets.on('connection', function (socket) {
       players[data.id].ya = 0;
     }   
     //do more in depth movement calculations
-    update(players[data.id].id, players[data.id].x, players[data.id].y);
+    update(players[data.id].id);
   });
+  var waypointUpdate = function(id, wpDistance) {
+    //WAYPOINT calculations
+    if(Math.abs(players[id].x-players[id].wp.x) < wpDistance && Math.abs(players[id].y-players[id].wp.y) < wpDistance){
+      currentw = players[id].wp;
+      players[id].xp += currentw.xp;
+      var newLevel = calculateLevel(players[id].xp);
+      if (newLevel > players[id].level) {
+        //set new level, emit level up event
+        players[id].level = newLevel;
+        socket.emit('leveledup', { level:newLevel });
+        //send a message about it to all players
+        io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: 'Player ' + id + ' reached level ' + newLevel + '!'});
+      }
+      
+      var randx = new Array();
+      var randy = new Array();
+      //generate new random waypoint
+      randx[0] = Math.floor(Math.random()*5001);
+      randx[1] = Math.floor(Math.random()*-5001);
+      randy[0] = Math.floor(Math.random()*5001);
+      randy[1] = Math.floor(Math.random()*-5001);
 
+      var cx = Math.floor(Math.random()*2);
+      var cy = Math.floor(Math.random()*2);
+      
+      var distance = Math.sqrt(Math.pow(players[id].x - randx[cx],2) + Math.pow(players[id].y - randx[cy],2));
+      var xpgen = Math.floor(Math.pow(distance, .25) - 1) + players[id].level;
+      randomw = {x:randx[cx], y:randy[cy], xp: xpgen};
+      players[id].wp = randomw;
+      socket.emit('newwaypoint', { wp:randomw });
+    }
+    
+  }
   var update = function(id) {
     //first verify that we don't have a shitstorm on our hands
     if (players[id].hasOwnProperty("xv")){
@@ -157,6 +179,14 @@ io.sockets.on('connection', function (socket) {
    }
   };
 });
+function calculateLevel(xp) {
+  if (xp >= 0 && xp < 10) return 1;
+  if (xp >= 11 && xp < 25) return 2;
+  if (xp >= 25 && xp < 50) return 3;
+  if (xp >= 50 && xp < 115) return 4;
+  if (xp >= 115 && xp < 250) return 5;
+  if (xp >= 250 && xp < 500) return 6;
+}
 function initiateStars(w,h) {
   var temparray = new Array();
   var numStars = 10000;
