@@ -90,7 +90,7 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('dataupdate', function (data) {
     //do waypoint calculations
-    var waypointDistance = 150;
+    var waypointDistance = 50;
     waypointUpdate(players[data.id].id, waypointDistance);
     
     //log packets sent by frame updates
@@ -209,12 +209,12 @@ io.sockets.on('connection', function (socket) {
   };
 });
 function calculateLevel(xp) {
-  if (xp >= 0 && xp < 15) return 1;
-  if (xp >= 15 && xp < 45) return 2;
-  if (xp >= 45 && xp < 105) return 3;
-  if (xp >= 105 && xp < 225) return 4;
-  if (xp >= 225 && xp < 465) return 5;
-  if (xp >= 465 && xp < 945) return 6;
+  if (xp >= 0 && xp < 30) return 1;
+  if (xp >= 30 && xp < 60) return 2;
+  if (xp >= 60 && xp < 100) return 3;
+  if (xp >= 100 && xp < 140) return 4;
+  if (xp >= 140 && xp < 180) return 5;
+  if (xp >= 180 && xp < 250) return 6;
 }
 function initiateStars(w,h) {
   var temparray = new Array();

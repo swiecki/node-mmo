@@ -16,17 +16,21 @@
     <input id="chattext" type="text" maxlength="75">
     <input id="send" type="submit" value="send">
   </form>
+  <a id="mute" class="button" href='#'>mute</a>
 <!--preload fonts-->
 <div style="font-family: Gotham Medium;">.</div>
 <div style="font-family: Gotham Bold;">.</div>
-
+<audio id="bgmusic" src="soliloquy.mp3" autoplay loop preload="auto">  
+<p>Your browser does not support the audio in this game.</p>  
+</audio> 
 <script src="/socket.io/socket.io.js"></script>
 <script>
 var socket = io.connect('http://localhost');
 </script>
 <script src="shipsdraw.js"></script>
 <script src="Stats.js"></script>
-<script>
+<script>  
+var musicpaused = false;
 var myid = 0;
 var ship;
 var leveledUp = false;
@@ -144,17 +148,17 @@ function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas) {
   bgimgdraw(context, players[myid].x, players[myid].y, b_canvas);
   bgstarsdraw(context, players[myid].x, players[myid].y, cw, ch, bgstars);
   stars(context, s_canvas, players[myid].x, players[myid].y, cw, ch);
-  
+  drawWreckedShip(context, players[myid].x, players[myid].y, cw, ch);
   //draw other players
   for (var playerid in players) {
     if (players[playerid].x != null && playerid != myid) {
       drawPlayerName(context, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, playerid, players[playerid].ship);
       
-      drawPlayer(context, players[playerid].ship, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, players[playerid].a, false);
+      drawPlayer(context, players[playerid].ship, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, players[playerid].a, false, cw, ch);
     }
   }
   //draw the player in the middle of the screen
-  drawPlayer(context, players[myid].ship, 0, 0, players[myid].a, true);
+  drawPlayer(context, players[myid].ship, 0, 0, players[myid].a, true, cw, ch);
   drawWaypoint(context, players[myid].ship, players[myid].x, players[myid].y, cw, ch);
   drawLevelUp(context, cw, ch);
 }
@@ -176,6 +180,7 @@ function stars(ctx, s_canvas, px, py, cw, ch) {
 }
 
 function bgstarsdraw(ctx, px, py, cw, ch, starlist) {
+  ctx.shadowColor = "rgba(0, 0, 0, 0)";
   for (var i in starlist) {
     var x = starlist[i][0];
     var y = starlist[i][1];
@@ -197,15 +202,26 @@ function bgstarsdraw(ctx, px, py, cw, ch, starlist) {
 
 function bgimgdraw(ctx, px, py, b_canvas) {
   //draw pre-rendered hubble image          
-  ctx.drawImage(b_canvas,-400 - px/60,-400 - py/60);
+  ctx.drawImage(b_canvas,-400 - Math.floor(px/45),-400 - Math.floor(py/45));
 }
 
-function drawPlayer(ctx, ship, x, y, a, center) {
+function drawPlayer(ctx, ship, x, y, a, center, cw, ch) {
   if (ship == 1) {
-    ship1draw(ctx,x,y,a,center);
+    ship1draw(ctx,x,y,a,center, cw, ch);
   }
   else if (ship == 2) {
-    ship2draw(ctx,x,y,a,center);
+    ship2draw(ctx,x,y,a,center, cw, ch);
+  }
+}
+
+function drawWreckedShip(ctx, px, py, cw, ch) {
+  wx = waypoint.x;
+  wy = waypoint.y;
+  shipwidth = 50;
+  shipheight = 50;
+  if (Math.abs(px-wx) < cw && Math.abs(py-wy) < ch) {
+    ctx.fillStyle = "white";
+    ctx.fillRect(wx + cw/2 - px - shipwidth/2, wy + ch/2 - py - shipheight/2, shipwidth, shipheight);
   }
 }
 
@@ -322,7 +338,20 @@ $("#chat").submit(function(event) {
   $("#chattext").val('');
   socket.emit('chatmessagesend', { id: myid, playermsg: true, msg: value });
 });
-
+//mute audio
+$("#mute").click(function(event) {
+  event.preventDefault();
+  var music = document.getElementById('bgmusic');
+  if (!window.musicpaused){
+    music.pause();
+    window.musicpaused = true;
+  }
+  else {
+    //music.load();
+    music.play();
+    window.musicpaused = false;
+  }
+});
 function initiateStars(w,h) {
   var temparray = new Array();
   var numStars = 10000;
