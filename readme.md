@@ -13,11 +13,15 @@ Idea for gameplay: you are a lifeboat. save people in space. You have to go arou
 TODO
 ----
 
+Need 8 art assets:
+Add in scrapped ships at waypoints. Say 3 different kinds of scrapped ship.
+
+Make ship differences meaningful. Make at least 5 ships. Have everyone start at the first ship, then you can choose upon level up. Ships have different movement speeds, turning speeds, and rescue distances.
+
+Other stuff:
 Attach a random message for flavor to each waypoint that is shown upon completion.
 
 Make rendering independent of game logic- right now it updates only when it receieves the request. Have it update anyways, and only provide rendering information on request. Goes hand in hand with: Switch out a single array for data and rendering for two arrays- one that has complete data (or an object) and an array that is modified every time someone disconnects or connects that has easy rendering data in a way that is fast to iterate through.
-
-Add more ships with different movement speeds and levels, maybe make the player get different ships once they level.
 
 ~~Make other players ships rotate -- Rotate ships according to either their velocities or their acceleration (will probably be better to do a, but maybe harder?);~~
 
