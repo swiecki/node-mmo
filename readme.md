@@ -19,9 +19,14 @@ Add in scrapped ships at waypoints. Say 3 different kinds of scrapped ship.
 Make ship differences meaningful. Make at least 5 ships. Have everyone start at the first ship, then you can choose upon level up. Ships have different movement speeds, turning speeds, and rescue distances.
 
 Other stuff:
+
+Add xp-bar to HUD.
+
 Attach a random message for flavor to each waypoint that is shown upon completion.
 
 Make rendering independent of game logic- right now it updates only when it receieves the request. Have it update anyways, and only provide rendering information on request. Goes hand in hand with: Switch out a single array for data and rendering for two arrays- one that has complete data (or an object) and an array that is modified every time someone disconnects or connects that has easy rendering data in a way that is fast to iterate through.
+
+Add a store so we can save the player on disconnect according to some pc-unique id (maybe a hash in a cookie) and then recover from where they left off if they come back
 
 ~~Make other players ships rotate -- Rotate ships according to either their velocities or their acceleration (will probably be better to do a, but maybe harder?);~~
 

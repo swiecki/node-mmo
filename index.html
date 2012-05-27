@@ -62,7 +62,7 @@ socket.on('chatmessageresponse', function (data) {
   $("#chatlist").append('<li>Player ' + data.id + ' said: ' + data.msg + '</li>');
   }
   else {
-  $("#chatlist").append('<li style="font-family:Gotham Bold;color:#fff;">' + data.msg + '</li>');
+  $("#chatlist").append('<li style="font-family:Gotham Bold;color:#00A2E8;">' + data.msg + '</li>');
   }
   $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);
 });
@@ -251,14 +251,14 @@ function drawWaypoint(ctx, ship, x, y, cw, ch) {
   ctx.shadowOffsetX = 2;
   ctx.shadowOffsetY = 2;
   ctx.shadowBlur = 5;
-  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
   // Increase line width
   ctx.lineWidth = 5;
   ctx.beginPath();
-  //ctx.strokeStyle = "rgba(255, 209, 117,.7)";//cool color, should use later: 0,162,232
+  ctx.strokeStyle = "rgba(255, 209, 117,.5)";//cool blue: 0,162,232, yellow: 255, 209, 117,.7
   var gradient = ctx.createRadialGradient(cw/2, ch/2+7, 30, cw/2, ch/2+7, 50);
-  gradient.addColorStop(0, "rgb(241, 218, 54)");
-  gradient.addColorStop(1, "rgb(252, 227, 0)");
+  gradient.addColorStop(0, "rgba(241, 218, 54,.5)");
+  gradient.addColorStop(1, "rgba(252, 227, 0,.5)");
   ctx.strokeStyle = gradient;
   ctx.arc(cw/2, ch/2, 45, angle1, angle2, false);
   ctx.stroke();
@@ -267,11 +267,11 @@ function drawWaypoint(ctx, ship, x, y, cw, ch) {
 function drawLevelUp(ctx, cw, ch) {
   if (leveledUp){
     ctx.save();
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
     ctx.shadowBlur = 5;
-    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-    var gradient = ctx.createLinearGradient(0, 210, 0, 300);
+    ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+    var gradient = ctx.createLinearGradient(0, 210, 0, 350);
     gradient.addColorStop(0, "rgb(255, 255, 255)");
     gradient.addColorStop(1, "rgb(80, 80, 80)");
     ctx.fillStyle = gradient;

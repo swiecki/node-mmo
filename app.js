@@ -137,7 +137,6 @@ io.sockets.on('connection', function (socket) {
         //send a message about it to all players
         io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: 'Player ' + id + ' reached level ' + newLevel + '!'});
       }
-      
       var randx = new Array();
       var randy = new Array();
       //generate new random waypoint
@@ -145,17 +144,14 @@ io.sockets.on('connection', function (socket) {
       randx[1] = Math.floor(Math.random()*-5001);
       randy[0] = Math.floor(Math.random()*5001);
       randy[1] = Math.floor(Math.random()*-5001);
-
       var cx = Math.floor(Math.random()*2);
       var cy = Math.floor(Math.random()*2);
-      
       var distance = Math.sqrt(Math.pow(players[id].x - randx[cx],2) + Math.pow(players[id].y - randx[cy],2));
       var xpgen = Math.floor(Math.pow(distance, .25) - 1) + players[id].level;
       randomw = {x:randx[cx], y:randy[cy], xp: xpgen};
       players[id].wp = randomw;
       socket.emit('newwaypoint', { wp:randomw });
     }
-    
   }
   var update = function(id) {
     //first verify that we don't have a shitstorm on our hands
@@ -198,7 +194,6 @@ io.sockets.on('connection', function (socket) {
     if (yv > 0 && xv < 0){
     newa =Math.PI + Math.atan(players[id].xv/(players[id].yv * -1));
     }
-    
     //dampen change
     if (Math.abs(newa-players[id].a) > .035){
       players[id].a = newa;
@@ -208,19 +203,18 @@ io.sockets.on('connection', function (socket) {
     players[id].x = 0;
     players[id].y = 0;
     io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: 'Player ' + id + '\'s position was reset. You cannot fly that far out into deep space.'});
-    
     }
     io.sockets.emit('update', players[id]);
    }
   };
 });
 function calculateLevel(xp) {
-  if (xp >= 0 && xp < 10) return 1;
-  if (xp >= 11 && xp < 25) return 2;
-  if (xp >= 25 && xp < 50) return 3;
-  if (xp >= 50 && xp < 115) return 4;
-  if (xp >= 115 && xp < 250) return 5;
-  if (xp >= 250 && xp < 500) return 6;
+  if (xp >= 0 && xp < 15) return 1;
+  if (xp >= 15 && xp < 45) return 2;
+  if (xp >= 45 && xp < 105) return 3;
+  if (xp >= 105 && xp < 225) return 4;
+  if (xp >= 225 && xp < 465) return 5;
+  if (xp >= 465 && xp < 945) return 6;
 }
 function initiateStars(w,h) {
   var temparray = new Array();
