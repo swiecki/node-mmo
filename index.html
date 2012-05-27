@@ -24,7 +24,7 @@
 <script>
 var socket = io.connect('http://localhost');
 </script>
-<script src="drawships.js"></script>
+<script src="shipsdraw.js"></script>
 <script src="Stats.js"></script>
 <script>
 var myid = 0;
@@ -62,7 +62,7 @@ socket.on('chatmessageresponse', function (data) {
   $("#chatlist").append('<li>Player ' + data.id + ' said: ' + data.msg + '</li>');
   }
   else {
-  $("#chatlist").append('<li>' + data.msg + '</li>');
+  $("#chatlist").append('<li style="font-family:Gotham Bold;color:#fff;">' + data.msg + '</li>');
   }
   $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);
 });
@@ -77,6 +77,7 @@ socket.on('leveledup', function (data) {
   setTimeout( function() {leveledUp = false;}, 5000);
 });
 function game() {
+  initialize_ships();
   //fps counter next 2 lines
   var stats = new Stats();
   stats.setMode(0);
@@ -104,8 +105,8 @@ function game() {
   
   //prerender background image
   var b_canvas = document.createElement('canvas');
-  b_canvas.width = 1600;
-  b_canvas.height = 1200;
+  b_canvas.width = 2163;
+  b_canvas.height = 1756;
   var b_context = b_canvas.getContext('2d');
   var bimg = new Image();
   bimg.onload = function(){
@@ -138,65 +139,65 @@ function updateAll() {
   
 function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas) {
   //these are needed because the 0,0 of the ship sprite is the upper left corner, not the center
-  var xadjust = cw/2 - 24;
-  var yadjust = ch/2 - 22;
+  var xadjust = cw/2;
+  var yadjust = ch/2;
   bgimgdraw(context, players[myid].x, players[myid].y, b_canvas);
   bgstarsdraw(context, players[myid].x, players[myid].y, cw, ch, bgstars);
   stars(context, s_canvas, players[myid].x, players[myid].y, cw, ch);
-  //draw other players-- this has to be changed so they are drawn in relation to the player's current position
+  
+  //draw other players
   for (var playerid in players) {
     if (players[playerid].x != null && playerid != myid) {
       drawPlayerName(context, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, playerid, players[playerid].ship);
       
-      drawPlayer(context, players[playerid].ship, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y);
+      drawPlayer(context, players[playerid].ship, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, players[playerid].a, false);
     }
   }
   //draw the player in the middle of the screen
-  //drawPlayer(context, players[myid].ship, xadjust, yadjust);
   drawPlayer(context, players[myid].ship, 0, 0, players[myid].a, true);
   drawWaypoint(context, players[myid].ship, players[myid].x, players[myid].y, cw, ch);
   drawLevelUp(context, cw, ch);
 }
 
 function stars(ctx, s_canvas, px, py, cw, ch) {
-        for (var i in starlist) {
-          var x = starlist[i][0];
-          var y = starlist[i][1];
-          //check if star would be within view field
-          if (Math.abs(px - x) < cw/2 + 39 && Math.abs(py - y) < ch/2 + 39){
-            //transform coords from world coordinate system to pixel coordinate system
-            x = x + (cw/2);
-            y = y + (ch/2);
-            //old code makes a circle, new code draws pre-rendered image
-            //ctx.arc(x - px, y - py, 6, 0, Math.PI * 2, true);
-            ctx.drawImage(s_canvas,x - px, y - py);
-        }
-        }
+  for (var i in starlist) {
+    var x = starlist[i][0];
+    var y = starlist[i][1];
+    //check if star would be within view field
+    if (Math.abs(px - x) < cw/2 + 39 && Math.abs(py - y) < ch/2 + 39){
+        //transform coords from world coordinate system to pixel coordinate system
+        x = x + (cw/2);
+        y = y + (ch/2);
+        //old code makes a circle, new code draws pre-rendered image
+        //ctx.arc(x - px, y - py, 6, 0, Math.PI * 2, true);
+        ctx.drawImage(s_canvas,x - px, y - py);
+    }
+  }
 }
 
 function bgstarsdraw(ctx, px, py, cw, ch, starlist) {
-        for (var i in starlist) {
-          var x = starlist[i][0];
-          var y = starlist[i][1];
-          // Make the stars white
-          ctx.fillStyle = "white";
-        //check if star would be within view field
-        if (Math.abs(px/1.5 - x) < cw/2 + 5 && Math.abs(py/1.5 - y) < ch/2 + 5){
-          //transform coords from world coordinate system to pixel coordinate system
-          x = x + (cw/2);
-          y = y + (ch/2);
-          ctx.beginPath();
-          //draw circle
-          ctx.arc(x - px/1.5, y - py/1.5, 2, 0, Math.PI * 2, true);
-          ctx.closePath();
-          ctx.fill();
-        }
-        }
+  for (var i in starlist) {
+    var x = starlist[i][0];
+    var y = starlist[i][1];
+    // Make the stars white
+    ctx.fillStyle = "white";
+    //check if star would be within view field
+    if (Math.abs(px/1.5 - x) < cw/2 + 5 && Math.abs(py/1.5 - y) < ch/2 + 5){
+      //transform coords from world coordinate system to pixel coordinate system
+      x = x + (cw/2);
+      y = y + (ch/2);
+      ctx.beginPath();
+      //draw circle
+      ctx.arc(x - px/1.5, y - py/1.5, 2, 0, Math.PI * 2, true);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
 }
 
 function bgimgdraw(ctx, px, py, b_canvas) {
-          //old code makes a circle, new code draws pre-rendered image
-          ctx.drawImage(b_canvas,-300 - px/100,-300 - py/100);
+  //draw pre-rendered hubble image          
+  ctx.drawImage(b_canvas,-400 - px/60,-400 - py/60);
 }
 
 function drawPlayer(ctx, ship, x, y, a, center) {
@@ -204,7 +205,7 @@ function drawPlayer(ctx, ship, x, y, a, center) {
     ship1draw(ctx,x,y,a,center);
   }
   else if (ship == 2) {
-    ship2draw(ctx,x,y);
+    ship2draw(ctx,x,y,a,center);
   }
 }
 
@@ -212,10 +213,10 @@ function drawPlayerName(ctx, x, y, id, ship) {
     var string = "Player " + id;
     ctx.font = '10px Gotham Medium'
     if (ship == 1){
-      ctx.fillText(string, x+4, y-4);
+      ctx.fillText(string, x-20, y-38);
     }
     else if (ship == 2) {
-      ctx.fillText(string, x+2, y-3);
+      ctx.fillText(string, x-20, y-38);
     }
 }
 function drawWaypoint(ctx, ship, x, y, cw, ch) {

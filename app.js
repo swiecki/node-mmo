@@ -57,9 +57,8 @@ io.sockets.on('connection', function (socket) {
       yvel = 0,
       xacc = 0,
       yacc = 0,
-      waypoint = {x:500, y:500, xp:5};
+      waypoint = {x:0, y:0, xp:0, msg:'Crashed spaceships need your help! Move into the direction of the yellow waypoint indicator in the center of your screen to find them and save them!'};
   var spaceship_style = Math.floor(Math.random()*(2)+1);
-  spaceship_style = 1;
   
   //set up the new player
   socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: spaceship_style, x: worldx, y: worldy, wp:waypoint, xp: 0, level: 1, currentplayers: players});
@@ -121,10 +120,15 @@ io.sockets.on('connection', function (socket) {
     update(players[data.id].id);
   });
   var waypointUpdate = function(id, wpDistance) {
-    //WAYPOINT calculations
+    //waypoint calculations
     if(Math.abs(players[id].x-players[id].wp.x) < wpDistance && Math.abs(players[id].y-players[id].wp.y) < wpDistance){
       currentw = players[id].wp;
+      //add xp
       players[id].xp += currentw.xp;
+      if (currentw.hasOwnProperty("msg")){
+        socket.emit('chatmessageresponse', {playermsg:false, id:null, msg: currentw.msg});
+      }
+      //figure out level stuff
       var newLevel = calculateLevel(players[id].xp);
       if (newLevel > players[id].level) {
         //set new level, emit level up event

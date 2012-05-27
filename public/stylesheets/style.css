@@ -41,6 +41,7 @@ ul#chatlist {
 }
 ul#chatlist li {
   width:200px;
+  margin:10px 0 10px 0;
 }
 form#chat {
   width:920px;
