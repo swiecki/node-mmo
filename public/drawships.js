@@ -134,7 +134,27 @@ function s1enginesbottom(ctx,x,y) {
   ctx.fillStyle = radgrad;
   ctx.fillRect(x,y,20*ph,20*pw);
 }
-function ship1draw(ctx,x, y) {
+function ship1draw(ctx,x,y,a,center) {
+  if(center){
+  ctx.save();
+  ctx.translate(350, 350);
+  ctx.rotate(a);
+  s1enginesbottom(ctx,x-(.5)*12*pw,y-(.5)*9*ph);
+  s1col1(ctx,x-(.5)*12*pw,y-(.5)*9*ph);
+  s1col2(ctx,x-(.5)*12*pw,y-(.5)*9*ph);
+  s1col3(ctx,x-(.5)*12*pw,y-(.5)*9*ph);
+  s1col4(ctx,x-(.5)*12*pw,y-(.5)*9*ph);
+  s1col5(ctx,x-(.5)*12*pw,y-(.5)*9*ph);
+  s1col6(ctx,x-(.5)*12*pw,y-(.5)*9*ph);
+  s1col6(ctx,(x+1*pw)-(.5)*12*pw,y-(.5)*9*ph);
+  s1col5(ctx,(x+3*pw)-(.5)*12*pw,y-(.5)*9*ph);
+  s1col4(ctx,(x+5*pw)-(.5)*12*pw,y-(.5)*9*ph);
+  s1col3(ctx,(x+7*pw)-(.5)*12*pw,y-(.5)*9*ph);
+  s1col2(ctx,(x+9*pw)-(.5)*12*pw,y-(.5)*9*ph);
+  s1col1(ctx,(x+11*pw)-(.5)*12*pw,y-(.5)*9*ph);
+  ctx.restore();
+  }
+  else{
   s1enginesbottom(ctx,x,y);
   s1col1(ctx,x,y);
   s1col2(ctx,x,y);
@@ -142,13 +162,14 @@ function ship1draw(ctx,x, y) {
   s1col4(ctx,x,y);
   s1col5(ctx,x,y);
   s1col6(ctx,x,y);
-  s1col6(ctx,(x+(1*ph)),y);
-  s1col5(ctx,x+(3*ph),y);
-  s1col4(ctx,x+(5*ph),y);
-  s1col3(ctx,x+(7*ph),y);
-  s1col2(ctx,x+(9*ph),y);
-  s1col1(ctx,x+(11*ph),y);
-  
+  s1col6(ctx,(x+(1*pw)),y);
+  s1col5(ctx,x+(3*pw),y);
+  s1col4(ctx,x+(5*pw),y);
+  s1col3(ctx,x+(7*pw),y);
+  s1col2(ctx,x+(9*pw),y);
+  s1col1(ctx,x+(11*pw),y);
+  ctx.restore();
+  }
 }
 function s2col1 (ctx,x,y){
   var context = ctx;

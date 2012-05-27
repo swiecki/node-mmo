@@ -40,7 +40,7 @@ socket.on('newstart', function (data) {
   myid = data.id;
   ship = data.ship;
   players = data.currentplayers;
-  players[myid] = { id: myid, ship: ship, x: 0, y: 0, level:0, xp:0, wp:waypoint};
+  players[myid] = { id: myid, ship: ship, x: 0, y: 0, a:0, level:0, xp:0, wp:waypoint};
 });
 socket.on('newguy', function (data) {
   players[data.id] = ({id: data.id, ship: data.ship, x: data.x, y: data.y });
@@ -52,6 +52,7 @@ socket.on('update', function (data) {
   players[data.id].ship = data.ship;
   players[data.id].x = data.x;
   players[data.id].y = data.y;
+  players[data.id].a = data.a;
 });
 socket.on('removeplayer', function (data) {
   players.splice(data.id, 1, []);
@@ -101,6 +102,17 @@ function game() {
   }
   img.src = 'images/star1.png';
   
+  //prerender background image
+  var b_canvas = document.createElement('canvas');
+  b_canvas.width = 1600;
+  b_canvas.height = 1200;
+  var b_context = b_canvas.getContext('2d');
+  var bimg = new Image();
+  bimg.onload = function(){
+    b_context.drawImage(bimg,0,0);
+  }
+  bimg.src = 'images/space.jpg';
+  
   var backgroundstars = initiateStars(context_width, context_height);
   var gameloop = setInterval(function() {
   //fps counter
@@ -109,7 +121,7 @@ function game() {
   //reset canvas in between each frame, paint it black for space
   context.fillStyle = 'black';
   context.fillRect(0, 0, context_width, context_height);
-  drawAll(context, s_canvas, context_width, context_height, backgroundstars);
+  drawAll(context, s_canvas, context_width, context_height, backgroundstars, b_canvas);
   
   //fps counter
   stats.end();
@@ -124,10 +136,11 @@ function updateAll() {
   //}
 }
   
-function drawAll(context, s_canvas, cw, ch, bgstars) {
+function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas) {
   //these are needed because the 0,0 of the ship sprite is the upper left corner, not the center
   var xadjust = cw/2 - 24;
   var yadjust = ch/2 - 22;
+  bgimgdraw(context, players[myid].x, players[myid].y, b_canvas);
   bgstarsdraw(context, players[myid].x, players[myid].y, cw, ch, bgstars);
   stars(context, s_canvas, players[myid].x, players[myid].y, cw, ch);
   //draw other players-- this has to be changed so they are drawn in relation to the player's current position
@@ -139,7 +152,8 @@ function drawAll(context, s_canvas, cw, ch, bgstars) {
     }
   }
   //draw the player in the middle of the screen
-  drawPlayer(context, players[myid].ship, xadjust, yadjust);
+  //drawPlayer(context, players[myid].ship, xadjust, yadjust);
+  drawPlayer(context, players[myid].ship, 0, 0, players[myid].a, true);
   drawWaypoint(context, players[myid].ship, players[myid].x, players[myid].y, cw, ch);
   drawLevelUp(context, cw, ch);
 }
@@ -172,7 +186,7 @@ function bgstarsdraw(ctx, px, py, cw, ch, starlist) {
           x = x + (cw/2);
           y = y + (ch/2);
           ctx.beginPath();
-          //old code makes a circle, new code draws pre-rendered image
+          //draw circle
           ctx.arc(x - px/1.5, y - py/1.5, 2, 0, Math.PI * 2, true);
           ctx.closePath();
           ctx.fill();
@@ -180,9 +194,14 @@ function bgstarsdraw(ctx, px, py, cw, ch, starlist) {
         }
 }
 
-function drawPlayer(ctx, ship, x, y) {
+function bgimgdraw(ctx, px, py, b_canvas) {
+          //old code makes a circle, new code draws pre-rendered image
+          ctx.drawImage(b_canvas,-300 - px/100,-300 - py/100);
+}
+
+function drawPlayer(ctx, ship, x, y, a, center) {
   if (ship == 1) {
-    ship1draw(ctx,x,y);
+    ship1draw(ctx,x,y,a,center);
   }
   else if (ship == 2) {
     ship2draw(ctx,x,y);
@@ -227,6 +246,11 @@ function drawWaypoint(ctx, ship, x, y, cw, ch) {
     var angle1 = pureangle - moddist;
     var angle2 = pureangle + moddist;
   }
+  ctx.save();
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+  ctx.shadowBlur = 5;
+  ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
   // Increase line width
   ctx.lineWidth = 5;
   ctx.beginPath();
@@ -235,11 +259,17 @@ function drawWaypoint(ctx, ship, x, y, cw, ch) {
   gradient.addColorStop(0, "rgb(241, 218, 54)");
   gradient.addColorStop(1, "rgb(252, 227, 0)");
   ctx.strokeStyle = gradient;
-  ctx.arc(cw/2, ch/2 + 7, 40, angle1, angle2, false);
+  ctx.arc(cw/2, ch/2, 45, angle1, angle2, false);
   ctx.stroke();
+  ctx.restore();
 }
 function drawLevelUp(ctx, cw, ch) {
   if (leveledUp){
+    ctx.save();
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    ctx.shadowBlur = 5;
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
     var gradient = ctx.createLinearGradient(0, 210, 0, 300);
     gradient.addColorStop(0, "rgb(255, 255, 255)");
     gradient.addColorStop(1, "rgb(80, 80, 80)");
@@ -248,6 +278,7 @@ function drawLevelUp(ctx, cw, ch) {
     ctx.fillText("Congratulations!", cw/2 - 200, ch/2- 100);
     ctx.font = '16px Gotham Bold';
     ctx.fillText("You have reached level " + players[myid].level, cw/2 - 100, ch/2- 70);
+    ctx.restore();
   }
 }
 window.addEventListener("load", game, true);

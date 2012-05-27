@@ -13,21 +13,23 @@ Idea for gameplay: you are a lifeboat. save people in space. You have to go arou
 TODO
 ----
 
-Rotate ships according to either their velocities or their acceleration (will probably be better to do a, but maybe harder?);
+Make other players ships rotate ~~Rotate ships according to either their velocities or their acceleration (will probably be better to do a, but maybe harder?);~~
+
+~~fix art assets that need transparent backgrounds~~
 
 Attach a random message for flavor to each waypoint that is shown upon completion.
 
 Make rendering independent of game logic- right now it updates only when it receieves the request. Have it update anyways, and only provide rendering information on request. Goes hand in hand with: Switch out a single array for data and rendering for two arrays- one that has complete data (or an object) and an array that is modified every time someone disconnects or connects that has easy rendering data in a way that is fast to iterate through.
 
-Make something cool happen after the boundaries- either deep space message, trigger a new environment, or teleport all the way across the map, or something.
-
 Add more ships with different movement speeds and levels, maybe make the player get different ships once they level.
+
+~~Make something cool happen after the boundaries- either deep space message, trigger a new environment, or teleport all the way across the map, or something.~~
 
 ~~Add waypoint generation system, generates waypoints based on random distance. XP per waypoint is based on distance from player at generation. Upon completion, level and xp are recalculated.~~
 
 ~~Space physics- drifting and acceleration-based gameplay instead of position based gameplay~~
 
-~~Add chat functionality.~~
+~~Add chat functionality. With custom fonts!~~
 
 ~~Add parallax starfields.~~
 

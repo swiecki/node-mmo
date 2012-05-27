@@ -2,7 +2,7 @@
 /**
  * Module dependencies.
  */
-var debug = false;
+var debug = true;
 var express = require('express');
 
 var app = module.exports = express.createServer()
@@ -59,6 +59,7 @@ io.sockets.on('connection', function (socket) {
       yacc = 0,
       waypoint = {x:500, y:500, xp:5};
   var spaceship_style = Math.floor(Math.random()*(2)+1);
+  spaceship_style = 1;
   
   //set up the new player
   socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: spaceship_style, x: worldx, y: worldy, wp:waypoint, xp: 0, level: 1, currentplayers: players});
@@ -67,7 +68,7 @@ io.sockets.on('connection', function (socket) {
   socket.broadcast.emit('newguy', { id: clientid, ship: spaceship_style, x: worldx, y: worldy });
   
   //add the player to the list of players
-  players[clientid] = {id: clientid, ship: spaceship_style, x: worldx, y: worldy, xv : xvel, xa : xacc, yv: yvel, ya: yacc, wp:waypoint, xp:0, level:1 };
+  players[clientid] = {id: clientid, ship: spaceship_style, x: worldx, y: worldy, xv : xvel, xa : xacc, yv: yvel, ya: yacc, a:0, wp:waypoint, xp:0, level:1 };
   
   //set id to be associated with socket
   socket.set('identification', clientid);
@@ -173,8 +174,38 @@ io.sockets.on('connection', function (socket) {
     players[id].x += players[id].xv;
     players[id].y += players[id].yv;
     
+    //set player angle from velocities
+    var xv = players[id].xv;
+    var yv = players[id].yv;
+    var newa;
+    if (yv == 0 && xv > 0) newa = Math.PI/2;
+    if (yv == 0 && xv < 0) newa = -1*Math.PI/2;
+    if (yv < 0 && xv == 0) newa = 0;
+    if (yv > 0 && xv == 0) newa = Math.PI;
+    if (yv < 0 && xv > 0){
+    newa = Math.atan(players[id].xv/(players[id].yv * -1));
+    }
+    if (yv < 0 && xv < 0){
+    newa = Math.atan(players[id].xv/(players[id].yv * -1));
+    }
+    if (yv > 0 && xv > 0){
+    newa =Math.PI + Math.atan(players[id].xv/(players[id].yv * -1));
+    }
+    if (yv > 0 && xv < 0){
+    newa =Math.PI + Math.atan(players[id].xv/(players[id].yv * -1));
+    }
+    
+    //dampen change
+    if (Math.abs(newa-players[id].a) > .035){
+      players[id].a = newa;
+    }
     //boundaries
-    //if (players[id].y < -10000)
+    if (players[id].y < -18000 || players[id].x < -18000 || players[id].x > 18000 || players[id].y > 18000) {
+    players[id].x = 0;
+    players[id].y = 0;
+    io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: 'Player ' + id + '\'s position was reset. You cannot fly that far out into deep space.'});
+    
+    }
     io.sockets.emit('update', players[id]);
    }
   };
