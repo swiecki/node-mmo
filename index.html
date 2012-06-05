@@ -69,7 +69,7 @@ socket.on('chatmessageresponse', function (data) {
     if(data.nick.toLowerCase() == 'christa'){
       color = 'pink';
     }
-    else if(data.nick.toLowerCase() == 'daniel'){
+    else if(data.nick.toLowerCase() == 'daniel' || data.nick.toLowerCase() == 'swiecki'){
       color = '#FFD700';
     }
     $("#chatlist").append('<li style="color: '+ color +'">' + data.nick + ' said: ' + data.msg + '</li>');
@@ -126,6 +126,17 @@ function game() {
     b_context.drawImage(bimg,0,0);
   }
   bimg.src = 'images/space.jpg';
+
+  //prerender broken ship image
+  var resueship_canvas = document.createElement('canvas');
+  resueship_canvas.width = 94;
+  resueship_canvas.height = 70;
+  var rescue_context = resueship_canvas.getContext('2d');
+  var brokenship = new Image();
+  brokenship.onload = function(){
+    rescue_context.drawImage(brokenship,0,0);
+  }
+  brokenship.src = 'images/rescueship.png';
   
   var backgroundstars = initiateStars(context_width, context_height);
   var gameloop = setInterval(function() {
@@ -135,7 +146,7 @@ function game() {
   //reset canvas in between each frame, paint it black for space
   context.fillStyle = 'black';
   context.fillRect(0, 0, context_width, context_height);
-  drawAll(context, s_canvas, context_width, context_height, backgroundstars, b_canvas);
+  drawAll(context, s_canvas, context_width, context_height, backgroundstars, b_canvas, resueship_canvas);
   
   //fps counter
   stats.end();
@@ -150,14 +161,14 @@ function updateAll() {
   //}
 }
   
-function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas) {
+function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas, resueship_canvas) {
   //these are needed because the 0,0 of the ship sprite is the upper left corner, not the center
   var xadjust = cw/2;
   var yadjust = ch/2;
   bgimgdraw(context, players[myid].x, players[myid].y, b_canvas);
   bgstarsdraw(context, players[myid].x, players[myid].y, cw, ch, bgstars);
   stars(context, s_canvas, players[myid].x, players[myid].y, cw, ch);
-  drawWreckedShip(context, players[myid].x, players[myid].y, cw, ch);
+  drawWreckedShip(context, players[myid].x, players[myid].y, cw, ch, resueship_canvas);
   //draw other players
   for (var playerid in players) {
     if (players[playerid].x != null && playerid != myid) {
@@ -223,14 +234,13 @@ function drawPlayer(ctx, ship, x, y, a, center, cw, ch) {
   }
 }
 
-function drawWreckedShip(ctx, px, py, cw, ch) {
+function drawWreckedShip(ctx, px, py, cw, ch, resueship_canvas) {
   wx = waypoint.x;
   wy = waypoint.y;
-  shipwidth = 50;
-  shipheight = 50;
+  shipwidth = 94;
+  shipheight = 70;
   if (Math.abs(px-wx) < cw && Math.abs(py-wy) < ch) {
-    ctx.fillStyle = "white";
-    ctx.fillRect(wx + cw/2 - px - shipwidth/2, wy + ch/2 - py - shipheight/2, shipwidth, shipheight);
+    ctx.drawImage(resueship_canvas,wx + cw/2 - px - shipwidth/2,wy + ch/2 - py - shipheight/2);
   }
 }
 
@@ -343,14 +353,15 @@ $(document.documentElement).keyup(function (event) {
 //chat implementation
 $("#chat").submit(function(event) {
   event.preventDefault();
-  if (window.nickname == null){
-    window.nickname = $("#chattext").val();
+  if (nickname == null){
+    nickname = $("#chattext").val();
+    socket.emit('nickupdate', { id: myid, nick: nickname });
     $("#chattext").val('');
   }
   else {
     var value = $("#chattext").val();
     $("#chattext").val('');
-    socket.emit('chatmessagesend', { nick: nickname, playermsg: true, msg: value });
+    socket.emit('chatmessagesend', { id: myid, nick: nickname, playermsg: true, msg: value });
   }
 });
 //mute audio

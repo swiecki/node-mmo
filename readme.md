@@ -13,14 +13,15 @@ Idea for gameplay: you are a lifeboat. save people in space. You have to go arou
 TODO
 ----
 
+Amend CSS file to add scable user interface.
+
+Add a pregame menu to handle nickname input?
+
 Add a store so we can save the player on disconnect according to some pc-unique id (maybe a hash in a cookie) and then recover from where they left off if they come back-- store only upon disconnect, but make cookie at connection.
 
-Need 8 art assets:
+Give ships different movement speeds, turning speeds, and rescue distances.
 
-Add in scrapped ships at waypoints. Say 3 different kinds of scrapped ship.
-
-Make ship differences meaningful. Make at least 5 ships. Have everyone start at the first ship, then you can choose upon level up. Ships have different movement speeds, turning speeds, and rescue distances.
-
+Add fuel mechanic.
 
 Other stuff:
 
@@ -54,6 +55,8 @@ Make rendering independent of game logic- right now it updates only when it rece
 ~~Player identification- names above ships.~~
 
 ~~Refine interface- chat takes up too much of the screen right now.~~
+
+~Need 8 art assets:Add in scrapped ships at waypoints. Make ship differences meaningful. Make at least 5 ships. Have everyone start at the first ship, then you can choose upon level up. ~
 
 License terms
 -------------

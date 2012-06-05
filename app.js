@@ -51,23 +51,20 @@ var maxShipSpeed = [0,20,30];
 //need to create a new entity when client connects, broadcast this entity to all clients, who then store it and get feedback about it.
 var clientid = 0;
 io.sockets.on('connection', function (socket) {
-  var worldx = 0,
-      worldy = 0,
-      xvel = 0,
+  var xvel = 0,
       yvel = 0,
       xacc = 0,
       yacc = 0,
-      waypoint = {x:0, y:0, xp:0, msg:'Crashed spaceships need your help! Move into the direction of the yellow waypoint indicator in the center of your screen to find them and save them!'};
-  var spaceship_style = Math.floor(Math.random()*(2)+1);
+      waypoint = {x:0, y:0, xp:0, msg:'Follow the yellow indicator near the center of your screen to save the crashed spaceships!'};
   
   //set up the new player
-  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: spaceship_style, x: worldx, y: worldy, wp:waypoint, xp: 0, level: 1, currentplayers: players});
+  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: 1, x: 0, y: 0, wp:waypoint, xp: 0, level: 1, currentplayers: players});
   
   //tell everyone about the new player
-  socket.broadcast.emit('newguy', { id: clientid, ship: spaceship_style, x: worldx, y: worldy });
+  socket.broadcast.emit('newguy', { id: clientid, ship: 1, x: 0, y: 0 });
   
   //add the player to the list of players
-  players[clientid] = {id: clientid, ship: spaceship_style, x: worldx, y: worldy, xv : xvel, xa : xacc, yv: yvel, ya: yacc, a:0, wp:waypoint, xp:0, level:1 };
+  players[clientid] = {id: clientid, ship: 1, nickname: 'Player', x: 0, y: 0, xv : xvel, xa : xacc, yv: yvel, ya: yacc, a:0, wp:waypoint, xp:0, level:1 };
   
   //set id to be associated with socket
   socket.set('identification', clientid);
@@ -81,6 +78,10 @@ io.sockets.on('connection', function (socket) {
     });
   });
   
+  socket.on('nickupdate', function (data) {
+    players[data.id].nickname = data.nick;
+  });
+
   socket.on('chatmessagesend', function (data) {
     io.sockets.emit('chatmessageresponse', data);
   });
@@ -141,8 +142,16 @@ io.sockets.on('connection', function (socket) {
         //set new level, emit level up event
         players[id].level = newLevel;
         socket.emit('leveledup', { level:newLevel });
+        //build message string
+        var message;
+        if (players[id].nickname == 'Player'){
+          message = 'Player ' + id;
+        }
+        else {
+          message = players[id].nickname;
+        }
         //send a message about it to all players
-        io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: 'Player ' + id + ' reached level ' + newLevel + '!'});
+        io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: message + ' reached level ' + newLevel + '!'});
       }
       var randx = new Array();
       var randy = new Array();
@@ -211,7 +220,14 @@ io.sockets.on('connection', function (socket) {
     if (players[id].y < -18000 || players[id].x < -18000 || players[id].x > 18000 || players[id].y > 18000) {
     players[id].x = 0;
     players[id].y = 0;
-    io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: 'Player ' + id + '\'s position was reset. You cannot fly that far out into deep space.'});
+    var message;
+        if (players[id].nickname == 'Player'){
+          message = 'Player ' + id;
+        }
+        else {
+          message = players[id].nickname;
+        }
+    io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: message + '\'s position was reset. You cannot fly that far out into deep space.'});
     }
     io.sockets.emit('update', players[id]);
    }
