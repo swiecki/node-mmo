@@ -78,10 +78,10 @@ function s2enginesbottom(ctx,x,y) {
   ctx.fillStyle = radgrad;
   ctx.fillRect(x,y,20*4,20*4);
 }
-function ship2draw(ctx,x,y,a,center) {
+function ship2draw(ctx,x,y,a,center,cw,ch) {
   if(center){
   ctx.save();
-  ctx.translate(350, 350);
+  ctx.translate(cw/2, ch/2);
   ctx.rotate(a);
   s1enginesbottom(ctx,x-(.5)*s1width,y-(.5)*s1height);
   ctx.drawImage(s2_canvas,x-(.5)*s1width,y-(.5)*s1height);

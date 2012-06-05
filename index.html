@@ -6,14 +6,14 @@
 </head>
 <body>
   <div class="container">
-    <canvas id="game" style="border: 1px solid #000;" height="700" width="700">Your browser doesn't support canvas</canvas>
+    <canvas id="game" style="border: 1px solid #000;" height="600" width="700">Your browser doesn't support canvas</canvas>
     <ul id="chatlist">
       <h2>Text Chat</h2>
       <li>You have joined chat.</li>
     <ul>
   </div>
   <form id="chat">
-    <input id="chattext" type="text" maxlength="75">
+    <input id="chattext" type="text" value="Enter your nickname here"maxlength="255">
     <input id="send" type="submit" value="send">
   </form>
   <a id="mute" class="button" href='#'>mute</a>
@@ -25,13 +25,14 @@
 </audio> 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-var socket = io.connect('http://localhost');
+var socket = io.connect('http://198.101.205.230');
 </script>
 <script src="shipsdraw.js"></script>
 <script src="Stats.js"></script>
 <script>  
 var musicpaused = false;
 var myid = 0;
+var nickname = null;
 var ship;
 var leveledUp = false;
 var players = new Array();
@@ -50,7 +51,8 @@ socket.on('newguy', function (data) {
   players[data.id] = ({id: data.id, ship: data.ship, x: data.x, y: data.y });
 });
 socket.on('disconnect', function () {
-  alert('you were disconnected.');
+  $("#chatlist").append('<li style="font-family:Gotham Bold;color:#00A2E8;">You were disconnected</li>');
+  $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);
 });
 socket.on('update', function (data) {  
   players[data.id].ship = data.ship;
@@ -63,12 +65,19 @@ socket.on('removeplayer', function (data) {
 });
 socket.on('chatmessageresponse', function (data) {
   if (data.playermsg) {
-  $("#chatlist").append('<li>Player ' + data.id + ' said: ' + data.msg + '</li>');
+    var color = 'white';
+    if(data.nick.toLowerCase() == 'christa'){
+      color = 'pink';
+    }
+    else if(data.nick.toLowerCase() == 'daniel'){
+      color = '#FFD700';
+    }
+    $("#chatlist").append('<li style="color: '+ color +'">' + data.nick + ' said: ' + data.msg + '</li>');
   }
   else {
-  $("#chatlist").append('<li style="font-family:Gotham Bold;color:#00A2E8;">' + data.msg + '</li>');
+    $("#chatlist").append('<li style="color:#00A2E8;">' + data.msg + '</li>');
   }
-  $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);
+    $("#chatlist").scrollTop($("#chatlist")[0].scrollHeight);
 });
 socket.on('newwaypoint', function (data) {
     window.waypoint = data.wp;
@@ -271,10 +280,10 @@ function drawWaypoint(ctx, ship, x, y, cw, ch) {
   // Increase line width
   ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.strokeStyle = "rgba(255, 209, 117,.5)";//cool blue: 0,162,232, yellow: 255, 209, 117,.7
+  ctx.strokeStyle = "rgba(255, 209, 117,1)";//cool blue: 0,162,232, yellow: 255, 209, 117,.7
   var gradient = ctx.createRadialGradient(cw/2, ch/2+7, 30, cw/2, ch/2+7, 50);
-  gradient.addColorStop(0, "rgba(241, 218, 54,.5)");
-  gradient.addColorStop(1, "rgba(252, 227, 0,.5)");
+  gradient.addColorStop(0, "rgba(241, 218, 54,1)");
+  gradient.addColorStop(1, "rgba(252, 227, 0,1)");
   ctx.strokeStyle = gradient;
   ctx.arc(cw/2, ch/2, 45, angle1, angle2, false);
   ctx.stroke();
@@ -334,9 +343,15 @@ $(document.documentElement).keyup(function (event) {
 //chat implementation
 $("#chat").submit(function(event) {
   event.preventDefault();
-  var value = $("#chattext").val();
-  $("#chattext").val('');
-  socket.emit('chatmessagesend', { id: myid, playermsg: true, msg: value });
+  if (window.nickname == null){
+    window.nickname = $("#chattext").val();
+    $("#chattext").val('');
+  }
+  else {
+    var value = $("#chattext").val();
+    $("#chattext").val('');
+    socket.emit('chatmessagesend', { nick: nickname, playermsg: true, msg: value });
+  }
 });
 //mute audio
 $("#mute").click(function(event) {

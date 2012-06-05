@@ -8,8 +8,8 @@
 }
 body {
   background-color:#0f0f0f;
-  padding: 50px;
   font: 14px "Gotham Medium", Helvetica, Arial, sans-serif;
+  overflow:none;
 }
 div.container {
   margin:auto;
@@ -23,7 +23,7 @@ ul#chatlist {
   display:block;
   background:#eee;
   width:200px;
-  height:702px;
+  height:602px;
   overflow:auto;
   list-style:none;
   padding:0 0 0 10px;
@@ -51,6 +51,7 @@ input#chattext {
   width:500px;
 }
 a.button{
+display:none;
 background-color: 
 #414141;
 background-image: -webkit-linear-gradient(top, 

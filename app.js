@@ -82,17 +82,17 @@ io.sockets.on('connection', function (socket) {
   });
   
   socket.on('chatmessagesend', function (data) {
-    console.log(data.playermsg);
-    console.log(data.msg);
-    console.log(data.id);
     io.sockets.emit('chatmessageresponse', data);
   });
 
   socket.on('dataupdate', function (data) {
     //do waypoint calculations
     var waypointDistance = 50;
+    //first verify that we don't have a shitstorm on our hands
+    if (data !== null && data !== undefined && data.hasOwnProperty("id")){
+    if (players[data.id] !== null && players[data.id] !== undefined && players[data.id].hasOwnProperty("x")){
     waypointUpdate(players[data.id].id, waypointDistance);
-    
+    }}
     //log packets sent by frame updates
     if (debug){
     messagecount ++;
@@ -117,9 +117,16 @@ io.sockets.on('connection', function (socket) {
       players[data.id].ya = 0;
     }   
     //do more in depth movement calculations
+    if (data !== null && data !== undefined && data.hasOwnProperty("id")){
+    if (players[data.id] !== null && players[data.id] !== undefined && players[data.id].hasOwnProperty("x")){
     update(players[data.id].id);
+    }}
+    
   });
   var waypointUpdate = function(id, wpDistance) {
+    //first verify that we don't have a shitstorm on our hands
+    if (players[id] !== null && players[id] !== undefined && players[id].hasOwnProperty("x")){
+    if(true) {
     //waypoint calculations
     if(Math.abs(players[id].x-players[id].wp.x) < wpDistance && Math.abs(players[id].y-players[id].wp.y) < wpDistance){
       currentw = players[id].wp;
@@ -153,11 +160,13 @@ io.sockets.on('connection', function (socket) {
       socket.emit('newwaypoint', { wp:randomw });
     }
   }
+  }
+  }
   var update = function(id) {
     //first verify that we don't have a shitstorm on our hands
-    if (players[id].hasOwnProperty("xv")){
+    if (players[id] !== null && players[id] !== undefined && players[id].hasOwnProperty("xv")){
     //next get how fast this ship can go and make sure it's not going any faster
-    var maxspeed = maxShipSpeed[players[id].ship];
+    var maxspeed = 20 + 2*players[id].level;
     if (players[id].xv > maxspeed) players[id].xv = maxspeed;
     if (players[id].xv < -maxspeed) players[id].xv = -maxspeed;
     if (players[id].yv > maxspeed) players[id].yv = maxspeed;
@@ -215,6 +224,19 @@ function calculateLevel(xp) {
   if (xp >= 100 && xp < 140) return 4;
   if (xp >= 140 && xp < 180) return 5;
   if (xp >= 180 && xp < 250) return 6;
+  if (xp >= 100 && xp < 100) return 3;
+  if (xp >= 100 && xp < 140) return 4;
+  if (xp >= 140 && xp < 180) return 5;
+  if (xp >= 180 && xp < 250) return 6;
+  if (xp >= 250 && xp < 330) return 7;
+  if (xp >= 330 && xp < 420) return 8;
+  if (xp >= 420 && xp < 520) return 9;
+  if (xp >= 520 && xp < 630) return 10;
+  if (xp >= 630 && xp < 750) return 11;
+  if (xp >= 750 && xp < 880) return 12;
+  if (xp >= 880 && xp < 1020) return 13;
+  if (xp >= 1020 && xp < 1170) return 14;
+  if (xp >= 1170 && xp < 1330) return 15;
 }
 function initiateStars(w,h) {
   var temparray = new Array();
