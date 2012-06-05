@@ -56,7 +56,7 @@ Make rendering independent of game logic- right now it updates only when it rece
 
 ~~Refine interface- chat takes up too much of the screen right now.~~
 
-~Need 8 art assets:Add in scrapped ships at waypoints. Make ship differences meaningful. Make at least 5 ships. Have everyone start at the first ship, then you can choose upon level up. ~
+~~Need 8 art assets:Add in scrapped ships at waypoints. Make ship differences meaningful. Make at least 5 ships. Have everyone start at the first ship, then you can choose upon level up.~~
 
 License terms
 -------------
