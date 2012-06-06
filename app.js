@@ -62,7 +62,7 @@ io.sockets.on('connection', function (socket) {
       wpdist = 0,
       startenergy = 1000,
       regentime = new Date(),
-      waypoint = {x:0, y:0, xp:0, msg:'Follow the yellow indicator near the center of your screen to save the crashed spaceships!'};
+      waypoint = {x:1500, y:-1500, xp:5};
   
   //set up the new player
   socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: 1, x: 0, y: 0, wp:waypoint, xp: 0, level: 1, energy:startenergy, currentplayers: players});
@@ -118,11 +118,13 @@ io.sockets.on('connection', function (socket) {
     
     //if a direction is being held, subtract some energy
     if (data.up || data.down || data.left || data.right){
+      players[data.id].engine = true;
       regentime = new Date();
       if (players[data.id].energy > 3){
         players[data.id].energy -= 3;
       }
     } else {
+      players[data.id].engine = false;
       //figure out if energy should be regenerated
       var currentTime = new Date();
       if (currentTime.getTime() - regentime.getTime() > 2500) {
@@ -164,8 +166,7 @@ io.sockets.on('connection', function (socket) {
   });
   var waypointUpdate = function(id, wpDistance) {
     //first verify that we don't have a shitstorm on our hands
-    if (players[id] !== null && players[id] !== undefined && players[id].hasOwnProperty("x")){
-    if(true) {
+    if (insanityTest(players[id])){
     //waypoint calculations
     if(Math.abs(players[id].x-players[id].wp.x) < wpDistance && Math.abs(players[id].y-players[id].wp.y) < wpDistance){
       currentw = players[id].wp;
@@ -208,7 +209,7 @@ io.sockets.on('connection', function (socket) {
     }
   }
   }
-  }
+
   var update = function(id) {
     //first verify that we don't have a shitstorm on our hands
     if (players[id] !== null && players[id] !== undefined && players[id].hasOwnProperty("xv")){
@@ -268,7 +269,7 @@ io.sockets.on('connection', function (socket) {
     io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: message + '\'s position was reset. You cannot fly that far out into deep space.'});
     }
     socket.emit('update', players[id]);
-    var trimmedData = { id: id, x: players[id].x, y: players[id].y, a: players[id].a, ship: players[id].ship, nickname: players[id].nickname };
+    var trimmedData = { id: id, x: players[id].x, y: players[id].y, a: players[id].a, ship: players[id].ship, nickname: players[id].nickname, engine: players[id].engine };
     socket.broadcast.emit('update', trimmedData);
    }
   };

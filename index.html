@@ -33,7 +33,8 @@ var socket = io.connect('http://198.101.205.230');
 </script>
 <script src="shipsdraw.js"></script>
 <script src="Stats.js"></script>
-<script>  
+<script>
+var tutorial = false, tutorialText = false;
 var musicpaused = false;
 var myid = 0, nickname = null, ship;
 var leveledUp = false;
@@ -50,6 +51,10 @@ socket.on('newstart', function (data) {
   currentenergy = data.energy;
   players = data.currentplayers;
   players[myid] = { id: myid, ship: ship, x: 0, y: 0, a:0, level:0, xp:0, wp:waypoint};
+  window.tutorial = true;
+  window.tutorialText = true;
+  setTimeout( function() {window.tutorialText = false;}, 5000);
+  setTimeout( function() {window.tutorial = false;}, 10000);
 });
 socket.on('newguy', function (data) {
   players[data.id] = ({id: data.id, ship: data.ship, x: data.x, y: data.y });
@@ -64,6 +69,7 @@ socket.on('update', function (data) {
   players[data.id].y = data.y;
   players[data.id].a = data.a;
   players[data.id].nickname = data.nickname;
+  players[data.id].engine = data.engine;
   //get player specific information
   if(data.id == myid){
     window.currentxp = data.xp;
@@ -185,11 +191,11 @@ function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas, resueship_canvas)
   for (var playerid in players) {
     if (players[playerid].x != null && playerid != myid) {
       drawPlayerName(context, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, playerid, players[playerid].ship);
-      drawPlayer(context, players[playerid].ship, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, players[playerid].a, false, cw, ch);
+      drawPlayer(context, players[playerid].ship, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, players[playerid].a, false, cw, ch, players[playerid].engine);
     }
   }
   //draw the player in the middle of the screen
-  drawPlayer(context, players[myid].ship, 0, 0, players[myid].a, true, cw, ch);
+  drawPlayer(context, players[myid].ship, 0, 0, players[myid].a, true, cw, ch, players[myid].engine);
   //draw gps
   drawWaypoint(context, players[myid].ship, players[myid].x, players[myid].y, cw, ch);
   if (leveledUp){
@@ -197,6 +203,9 @@ function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas, resueship_canvas)
   }
   drawXPHUD(context, currentxp, nextlevelxp, cw, ch);
   drawEnergyHUD(context, currentxp, nextlevelxp, cw, ch);
+  if (tutorial){
+    drawTutorial(context, cw, ch);
+  }
 }
 
 function stars(ctx, s_canvas, px, py, cw, ch) {
@@ -241,12 +250,12 @@ function bgimgdraw(ctx, px, py, b_canvas) {
   ctx.drawImage(b_canvas,-400 - Math.floor(px/45),-400 - Math.floor(py/45));
 }
 
-function drawPlayer(ctx, ship, x, y, a, center, cw, ch) {
+function drawPlayer(ctx, ship, x, y, a, center, cw, ch, enginesGo) {
   if (ship == 1) {
-    ship1draw(ctx,x,y,a,center, cw, ch);
+    ship1draw(ctx,x,y,a,center, cw, ch, enginesGo);
   }
   else if (ship == 2) {
-    ship2draw(ctx,x,y,a,center, cw, ch);
+    ship2draw(ctx,x,y,a,center, cw, ch, enginesGo);
   }
 }
 
@@ -335,6 +344,40 @@ function drawLevelUp(ctx, cw, ch) {
     ctx.fillText("Congratulations!", cw/2 - 200, ch/2- 100);
     ctx.font = '16px Gotham Bold';
     ctx.fillText("You have reached level " + players[myid].level, cw/2 - 100, ch/2- 70);
+    ctx.restore();
+}
+function drawTutorial(ctx, cw, ch) {
+    if(tutorialText){
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.shadowBlur = 5;
+      ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+      var gradient = ctx.createLinearGradient(0, 210, 0, 350);
+      gradient.addColorStop(0, "rgb(255, 255, 255)");
+      gradient.addColorStop(1, "rgb(80, 80, 80)");
+      ctx.fillStyle = gradient;
+      ctx.font = '20px Gotham Medium';
+      ctx.fillText("Find the broken down ships, save them,", cw/2 - 200, ch/2- 100);
+      ctx.fillText("get xp, level up!", cw/2 - 100, ch/2- 70);
+      ctx.font = '12px Gotham Medium';     
+    }
+
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText("Use your GPS!", 425, 245);
+    ctx.save();
+    ctx.fillStyle = "#FFFFFF";
+    ctx.translate(425,245);
+    ctx.scale(.5, .5);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.quadraticCurveTo(-10, 50, -50, 50);
+    ctx.lineTo(-50, 60);
+    ctx.lineTo(-60,45);
+    ctx.lineTo(-50, 30);
+    ctx.lineTo(-50,40);
+    ctx.quadraticCurveTo(-20, 40, 0, 0);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
 }
 function drawXPHUD(ctx, currentxp, nextlevelxp, cw, ch) {
@@ -499,6 +542,15 @@ CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
   this.arcTo(x,   y,   x+w, y,   r);
   this.closePath();
   return this;
+}
+function canvas_arrow(context, fromx, fromy, tox, toy){
+    var headlen = 10;   // length of head in pixels
+    var angle = Math.atan2(toy-fromy,tox-fromx);
+    context.moveTo(fromx, fromy);
+    context.lineTo(tox, toy);
+    context.lineTo(tox-headlen*Math.cos(angle-Math.PI/6),toy-headlen*Math.sin(angle-Math.PI/6));
+    context.moveTo(tox, toy);
+    context.lineTo(tox-headlen*Math.cos(angle+Math.PI/6),toy-headlen*Math.sin(angle+Math.PI/6));
 }
 
 </script>

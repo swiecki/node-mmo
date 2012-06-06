@@ -42,12 +42,12 @@ function s1enginesbottom(ctx,x,y) {
   ctx.fillStyle = radgrad;
   ctx.fillRect(x,y,20*4,20*4);
 }
-function ship1draw(ctx,x,y,a,center,cw,ch) {
+function ship1draw(ctx,x,y,a,center,cw,ch, engine) {
   if(center){
   ctx.save();
   ctx.translate(cw/2, ch/2);
   ctx.rotate(a);
-  s1enginesbottom(ctx,x-(.5)*s1width,y-(.5)*s1height);
+  if (engine) s1enginesbottom(ctx,x-(.5)*s1width,y-(.5)*s1height);
   ctx.drawImage(s1_canvas,x-(.5)*s1width,y-(.5)*s1height);
   ctx.restore();
   }
@@ -55,7 +55,7 @@ function ship1draw(ctx,x,y,a,center,cw,ch) {
   ctx.save();
   ctx.translate(x,y);
   ctx.rotate(a);
-  s1enginesbottom(ctx,-(.5)*s1width,-(.5)*s1height);
+  if (engine) s1enginesbottom(ctx,-(.5)*s1width,-(.5)*s1height);
   ctx.drawImage(s1_canvas,-(.5)*s1width,-(.5)*s1height);
   ctx.restore();
   }
@@ -78,12 +78,12 @@ function s2enginesbottom(ctx,x,y) {
   ctx.fillStyle = radgrad;
   ctx.fillRect(x,y,20*4,20*4);
 }
-function ship2draw(ctx,x,y,a,center,cw,ch) {
+function ship2draw(ctx,x,y,a,center,cw,ch, engine) {
   if(center){
   ctx.save();
   ctx.translate(cw/2, ch/2);
   ctx.rotate(a);
-  s1enginesbottom(ctx,x-(.5)*s1width,y-(.5)*s1height);
+  if (engine) s1enginesbottom(ctx,x-(.5)*s1width,y-(.5)*s1height);
   ctx.drawImage(s2_canvas,x-(.5)*s1width,y-(.5)*s1height);
   ctx.restore();
   }
@@ -91,7 +91,7 @@ function ship2draw(ctx,x,y,a,center,cw,ch) {
   ctx.save();
   ctx.translate(x,y);
   ctx.rotate(a);
-  s1enginesbottom(ctx,-(.5)*s1width,-(.5)*s1height);
+  if (engine) s1enginesbottom(ctx,-(.5)*s1width,-(.5)*s1height);
   ctx.drawImage(s2_canvas,-(.5)*s1width,-(.5)*s1height);
   ctx.restore();
   }
