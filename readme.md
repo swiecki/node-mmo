@@ -13,15 +13,16 @@ Idea for gameplay: you are a lifeboat. save people in space. You have to go arou
 TODO
 ----
 
-Amend CSS file to add scable user interface.
+Add prerendered versions of all ships, make ship choice random.
+
+Amend CSS file to add scalable user interface.
 
 Add a pregame menu to handle nickname input?
 
 Add a store so we can save the player on disconnect according to some pc-unique id (maybe a hash in a cookie) and then recover from where they left off if they come back-- store only upon disconnect, but make cookie at connection.
 
-Give ships different movement speeds, turning speeds, and rescue distances.
+Allow leveling up of energy regeneration rate, fuel efficiency rate, max speed, accelleration rate, and rescue distance.
 
-Add energy mechanic- slowly regenerates, need it to move.
 
 Other stuff:
 
@@ -56,6 +57,8 @@ Make rendering independent of game logic- right now it updates only when it rece
 ~~Need 8 art assets:Add in scrapped ships at waypoints. Make ship differences meaningful. Make at least 5 ships. Have everyone start at the first ship, then you can choose upon level up.~~
 
 ~~Add xp-bar to HUD.~~
+
+~~Add energy mechanic- slowly regenerates, need it to move.~~
 
 License terms
 -------------

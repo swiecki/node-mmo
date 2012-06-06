@@ -60,17 +60,18 @@ io.sockets.on('connection', function (socket) {
       speed = 0,
       maneuver = 0,
       wpdist = 0,
-      energy = 1000;
+      startenergy = 1000,
+      regentime = new Date(),
       waypoint = {x:0, y:0, xp:0, msg:'Follow the yellow indicator near the center of your screen to save the crashed spaceships!'};
   
   //set up the new player
-  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: 1, x: 0, y: 0, wp:waypoint, xp: 0, level: 1, energy:energy, currentplayers: players});
+  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: 1, x: 0, y: 0, wp:waypoint, xp: 0, level: 1, energy:startenergy, currentplayers: players});
   
   //tell everyone about the new player
   socket.broadcast.emit('newguy', { id: clientid, ship: 1, x: 0, y: 0 });
   
   //add the player to the list of players
-  players[clientid] = {id: clientid, ship: 1, nickname: 'Player', x: 0, y: 0, xv : xvel, xa : xacc, yv: yvel, ya: yacc, a:0, energy:energy, wp:waypoint, xp:0, level:1 };
+  players[clientid] = {id: clientid, ship: 1, nickname: 'Player', x: 0, y: 0, xv : xvel, xa : xacc, yv: yvel, ya: yacc, a:0, energy: startenergy, wp:waypoint, xp:0, level:1 };
   
   //set id to be associated with socket
   socket.set('identification', clientid);
@@ -102,17 +103,34 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('dataupdate', function (data) {
+    //test that everything isn't fucked up
+    if (insanityTest(data)){
+
     //do waypoint calculations
     var waypointDistance = 50;
-    //first verify that we don't have a shitstorm on our hands
-    if (data !== null && data !== undefined && data.hasOwnProperty("id")){
-    if (players[data.id] !== null && players[data.id] !== undefined && players[data.id].hasOwnProperty("x")){
     waypointUpdate(players[data.id].id, waypointDistance);
-    }}
+    
     //log packets sent by frame updates
     if (debug){
     messagecount ++;
     console.log(messagecount);
+    }
+    
+    //if a direction is being held, subtract some energy
+    if (data.up || data.down || data.left || data.right){
+      regentime = new Date();
+      if (players[data.id].energy > 3){
+        players[data.id].energy -= 3;
+      }
+    } else {
+      //figure out if energy should be regenerated
+      var currentTime = new Date();
+      if (currentTime.getTime() - regentime.getTime() > 2500) {
+        players[data.id].energy += 3;
+        if (players[data.id].energy > 1000) {
+          players[data.id].energy = 1000;
+        }
+      }
     }
     //adjust accelleration based on if buttons are held down
     if (data.up && !data.down && !data.left && !data.right) players[data.id].ya = -1;
@@ -123,6 +141,13 @@ io.sockets.on('connection', function (socket) {
     if (data.up && data.right && !data.down && !data.left) {players[data.id].xa = 1;players[data.id].ya = -1;}
     if (data.down && data.left && !data.up && !data.right) {players[data.id].xa =-1;players[data.id].ya = 1;}
     if (data.down && data.right && !data.up && !data.left) {players[data.id].xa = 1; players[data.id].ya = 1;}
+    
+    //out of energy condition
+    if (players[data.id].energy < 10){
+      players[data.id].xa = 0;
+      players[data.id].ya = 0;
+    }
+
     //define reset button (default escape)
     if (data.xpressed) {
       players[data.id].x = 500;
@@ -133,11 +158,9 @@ io.sockets.on('connection', function (socket) {
       players[data.id].ya = 0;
     }   
     //do more in depth movement calculations
-    if (data !== null && data !== undefined && data.hasOwnProperty("id")){
-    if (players[data.id] !== null && players[data.id] !== undefined && players[data.id].hasOwnProperty("x")){
     update(players[data.id].id);
-    }}
-    
+    //end insanity test
+    }
   });
   var waypointUpdate = function(id, wpDistance) {
     //first verify that we don't have a shitstorm on our hands
@@ -296,4 +319,10 @@ function initiateStars(w,h) {
     temparray[i] = [x,y];
   }
   return temparray;
+}
+function insanityTest(data){
+  if (data !== null && data !== undefined && data.hasOwnProperty("id")){
+    if (players[data.id] !== null && players[data.id] !== undefined && players[data.id].hasOwnProperty("x")){
+    return true;
+    }}
 }

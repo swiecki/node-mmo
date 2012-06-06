@@ -35,19 +35,19 @@ var socket = io.connect('http://198.101.205.230');
 <script src="Stats.js"></script>
 <script>  
 var musicpaused = false;
-var myid = 0, nickname = null, ship, fuel;
+var myid = 0, nickname = null, ship;
 var leveledUp = false;
 var players = new Array();
 var upp = false, downp = false, leftp = false, rightp = false, xstop = false;
 var starlist;
-var currentxp = 0, previouslevelxp = 0, nextlevelxp = 30,xpbarwidth = 0, energybarwidth, currentenergy;
+var currentxp = 0, previouslevelxp = 0, nextlevelxp = 30,xpbarwidth = 0, energybarwidth = 0, currentenergy;
 
 socket.on('newstart', function (data) {
   starlist = data.slist;
   window.waypoint = data.wp;
   myid = data.id;
   ship = data.ship;
-  fuel = data.fuel;
+  currentenergy = data.energy;
   players = data.currentplayers;
   players[myid] = { id: myid, ship: ship, x: 0, y: 0, a:0, level:0, xp:0, wp:waypoint};
 });
@@ -169,10 +169,8 @@ function game() {
 
 function updateAll() {
   // send a single update packet with everything that's happened
-  //here 'p' stands for pressed
-  //if (upp || downp || leftp || rightp) {
-    socket.emit('dataupdate', { id: myid, up: upp, down: downp, left: leftp, right: rightp, xpressed: xstop });
-  //}
+
+    socket.emit('dataupdate', { id: myid, up: upp, down: downp, left: leftp, right: rightp, xpressed: xstop, energy: currentenergy });
 }
   
 function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas, resueship_canvas) {
@@ -198,7 +196,7 @@ function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas, resueship_canvas)
     drawLevelUp(context, cw, ch);
   }
   drawXPHUD(context, currentxp, nextlevelxp, cw, ch);
-  //drawEnergyHUD(context, currentxp, nextlevelxp, cw, ch);
+  drawEnergyHUD(context, currentxp, nextlevelxp, cw, ch);
 }
 
 function stars(ctx, s_canvas, px, py, cw, ch) {
@@ -375,11 +373,14 @@ function drawEnergyHUD(ctx, currentxp, nextlevelxp, cw, ch) {
     var barx = cw/2 - barfullwidth/2;
 
     // normalize current xp in terms of progress to next level
-    var energylevel = currentenergy / 1000;
+    var energylevel = window.currentenergy / 1000;
     var baroldwidth = window.energybarwidth;
     var barshouldbewidth = Math.floor(energylevel * barfullwidth);
-    window.energybarwidth = window.energybarwidth - Math.floor(.1 * (barshouldbewidth - baroldwidth));
-
+    window.energybarwidth = window.energybarwidth + Math.floor(.1 * (barshouldbewidth - baroldwidth));
+    //complete the ease
+    if (Math.abs(window.energybarwidth - barfullwidth) < 20){
+      window.energybarwidth = window.energybarwidth + Math.floor(.5 * (barshouldbewidth - baroldwidth));
+    }
     var gradient = ctx.createLinearGradient(0, bary, 0, bary + 13);
     gradient.addColorStop(0, "rgb(137, 112, 229)");
     gradient.addColorStop(1, "rgb(82, 72, 165)");
