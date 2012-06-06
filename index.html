@@ -279,7 +279,7 @@ function drawPlayerName(ctx, x, y, id, ship) {
 function drawWaypoint(ctx, ship, x, y, cw, ch) {
   //var waypoint = window.waypoint;
   var distance = Math.sqrt(Math.pow(x-waypoint.x, 2) + Math.pow(y-waypoint.y,2));
-  var moddist = (200* Math.PI) / distance;
+  var moddist = (100* Math.PI) / distance;
   if (y > waypoint.y && x > waypoint.x) {
     var fraction = (y-waypoint.y)/(x-waypoint.x);
     var pureangle = Math.atan(fraction) + Math.PI;
