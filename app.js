@@ -45,8 +45,10 @@ app.get('/', function (req, res) {
 var players = new Array();
 var messagecount = 0;
 
-//ship speeds, index responds to ship type
-var maxShipSpeed = [0,20,30];
+//ship upgrade parameters, index corresponds to level of parameter
+var shipSpeeds = [15,20,25,30,35];
+var shipManeuver = [1,2,3,4];
+var shipWaypointDistance = [40,60,80,100];
 
 //need to create a new entity when client connects, broadcast this entity to all clients, who then store it and get feedback about it.
 var clientid = 0;
@@ -55,16 +57,20 @@ io.sockets.on('connection', function (socket) {
       yvel = 0,
       xacc = 0,
       yacc = 0,
+      speed = 0,
+      maneuver = 0,
+      wpdist = 0,
+      energy = 1000;
       waypoint = {x:0, y:0, xp:0, msg:'Follow the yellow indicator near the center of your screen to save the crashed spaceships!'};
   
   //set up the new player
-  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: 1, x: 0, y: 0, wp:waypoint, xp: 0, level: 1, currentplayers: players});
+  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: 1, x: 0, y: 0, wp:waypoint, xp: 0, level: 1, energy:energy, currentplayers: players});
   
   //tell everyone about the new player
   socket.broadcast.emit('newguy', { id: clientid, ship: 1, x: 0, y: 0 });
   
   //add the player to the list of players
-  players[clientid] = {id: clientid, ship: 1, nickname: 'Player', x: 0, y: 0, xv : xvel, xa : xacc, yv: yvel, ya: yacc, a:0, wp:waypoint, xp:0, level:1 };
+  players[clientid] = {id: clientid, ship: 1, nickname: 'Player', x: 0, y: 0, xv : xvel, xa : xacc, yv: yvel, ya: yacc, a:0, energy:energy, wp:waypoint, xp:0, level:1 };
   
   //set id to be associated with socket
   socket.set('identification', clientid);
@@ -73,6 +79,15 @@ io.sockets.on('connection', function (socket) {
   socket.on('disconnect', function (data) {
     //remove socket by socketid on disconnect
     socket.get('identification', function(err, id) {
+      var message;
+        if (players[id].nickname == 'Player'){
+          message = 'Player ' + id;
+        }
+        else {
+          message = players[id].nickname;
+        }
+        //send a message about it to all players
+        io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: message + ' has left the game.'});
     players.splice(id, 1, []);
     io.sockets.emit('removeplayer', { id: id });
     });
@@ -163,7 +178,7 @@ io.sockets.on('connection', function (socket) {
       var cx = Math.floor(Math.random()*2);
       var cy = Math.floor(Math.random()*2);
       var distance = Math.sqrt(Math.pow(players[id].x - randx[cx],2) + Math.pow(players[id].y - randx[cy],2));
-      var xpgen = Math.floor(Math.pow(distance, .25) - 1) + players[id].level;
+      var xpgen = Math.floor(((Math.pow(distance, .25) - 1) + players[id].level) * 3/4);
       randomw = {x:randx[cx], y:randy[cy], xp: xpgen};
       players[id].wp = randomw;
       socket.emit('newwaypoint', { wp:randomw });
@@ -229,7 +244,9 @@ io.sockets.on('connection', function (socket) {
         }
     io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: message + '\'s position was reset. You cannot fly that far out into deep space.'});
     }
-    io.sockets.emit('update', players[id]);
+    socket.emit('update', players[id]);
+    var trimmedData = { id: id, x: players[id].x, y: players[id].y, a: players[id].a, ship: players[id].ship, nickname: players[id].nickname };
+    socket.broadcast.emit('update', trimmedData);
    }
   };
 });
@@ -237,10 +254,6 @@ function calculateLevel(xp) {
   if (xp >= 0 && xp < 30) return 1;
   if (xp >= 30 && xp < 60) return 2;
   if (xp >= 60 && xp < 100) return 3;
-  if (xp >= 100 && xp < 140) return 4;
-  if (xp >= 140 && xp < 180) return 5;
-  if (xp >= 180 && xp < 250) return 6;
-  if (xp >= 100 && xp < 100) return 3;
   if (xp >= 100 && xp < 140) return 4;
   if (xp >= 140 && xp < 180) return 5;
   if (xp >= 180 && xp < 250) return 6;

@@ -1,4 +1,8 @@
 @font-face {
+    font-family: 'Gotham Thin';
+    src: url('Gotham-Thin.otf');
+}
+@font-face {
     font-family: 'Gotham Medium';
     src: url('Gotham-Medium.otf');
 }
@@ -13,21 +17,23 @@ body {
 }
 div.container {
   margin:auto;
-  width:920px;
+  width:1003px;
 }
 canvas {
   display:inline;
 }
 ul#chatlist {
+  font: 14px "Gotham Thin", Helvetica, Arial, sans-serif;
   float:right;
   display:block;
   background:#eee;
-  width:200px;
+  width:250px;
   height:602px;
   overflow:auto;
   list-style:none;
-  padding:0 0 0 10px;
+  padding:0 18px 0 10px;
   margin:0;
+  margin-right:18px;
   color:#efefef;
   
   background: #45484d; /* Old browsers */
@@ -40,12 +46,12 @@ ul#chatlist {
   filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#45484d', endColorstr='#000000',GradientType=0 ); /* IE6-9 */
 }
 ul#chatlist li {
-  width:200px;
+  width:250px;
   margin:10px 0 10px 0;
 }
 form#chat {
-  width:920px;
-  margin:auto;
+  float:left;
+  margin-right:30px;
 }
 input#chattext {
   width:500px;

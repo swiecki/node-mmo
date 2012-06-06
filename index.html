@@ -12,12 +12,16 @@
       <li>You have joined chat.</li>
     <ul>
   </div>
+  <div class="container">
   <form id="chat">
     <input id="chattext" type="text" value="Enter your nickname here"maxlength="255">
     <input id="send" type="submit" value="send">
   </form>
   <a id="mute" class="button" href='#'>mute</a>
+  </div>
+  
 <!--preload fonts-->
+<div style="font-family: Gotham Thin;">.</div>
 <div style="font-family: Gotham Medium;">.</div>
 <div style="font-family: Gotham Bold;">.</div>
 <audio id="bgmusic" src="soliloquy.mp3" autoplay loop preload="auto">  
@@ -31,19 +35,19 @@ var socket = io.connect('http://198.101.205.230');
 <script src="Stats.js"></script>
 <script>  
 var musicpaused = false;
-var myid = 0;
-var nickname = null;
-var ship;
+var myid = 0, nickname = null, ship, fuel;
 var leveledUp = false;
 var players = new Array();
 var upp = false, downp = false, leftp = false, rightp = false, xstop = false;
 var starlist;
+var currentxp = 0, previouslevelxp = 0, nextlevelxp = 30,xpbarwidth = 0, energybarwidth, currentenergy;
 
 socket.on('newstart', function (data) {
   starlist = data.slist;
   window.waypoint = data.wp;
   myid = data.id;
   ship = data.ship;
+  fuel = data.fuel;
   players = data.currentplayers;
   players[myid] = { id: myid, ship: ship, x: 0, y: 0, a:0, level:0, xp:0, wp:waypoint};
 });
@@ -59,6 +63,12 @@ socket.on('update', function (data) {
   players[data.id].x = data.x;
   players[data.id].y = data.y;
   players[data.id].a = data.a;
+  players[data.id].nickname = data.nickname;
+  //get player specific information
+  if(data.id == myid){
+    window.currentxp = data.xp;
+    window.currentenergy = data.energy;
+  }
 });
 socket.on('removeplayer', function (data) {
   players.splice(data.id, 1, []);
@@ -86,12 +96,16 @@ socket.on('newwaypoint', function (data) {
 socket.on('leveledup', function (data) {
   console.log('fired!' + 'level is ' + data.level);
   players[myid].level = data.level;
-  leveledUp = true;
+  xplevels = new Array();
+  xplevels = [0,30,60,100,140,180,250,330,420,520,630,750,880,1020,1170,1330];
+  window.nextlevelxp = xplevels[data.level];
+  window.previouslevelxp = xplevels[data.level - 1];
+  window.leveledUp = true;
   setTimeout( function() {leveledUp = false;}, 5000);
 });
 function game() {
   initialize_ships();
-  //fps counter next 2 lines
+  //fps counter next lines
   var stats = new Stats();
   stats.setMode(0);
   stats.domElement.style.position = 'absolute';
@@ -173,14 +187,18 @@ function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas, resueship_canvas)
   for (var playerid in players) {
     if (players[playerid].x != null && playerid != myid) {
       drawPlayerName(context, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, playerid, players[playerid].ship);
-      
       drawPlayer(context, players[playerid].ship, players[playerid].x + xadjust - players[myid].x, players[playerid].y + yadjust - players[myid].y, players[playerid].a, false, cw, ch);
     }
   }
   //draw the player in the middle of the screen
   drawPlayer(context, players[myid].ship, 0, 0, players[myid].a, true, cw, ch);
+  //draw gps
   drawWaypoint(context, players[myid].ship, players[myid].x, players[myid].y, cw, ch);
-  drawLevelUp(context, cw, ch);
+  if (leveledUp){
+    drawLevelUp(context, cw, ch);
+  }
+  drawXPHUD(context, currentxp, nextlevelxp, cw, ch);
+  //drawEnergyHUD(context, currentxp, nextlevelxp, cw, ch);
 }
 
 function stars(ctx, s_canvas, px, py, cw, ch) {
@@ -245,13 +263,19 @@ function drawWreckedShip(ctx, px, py, cw, ch, resueship_canvas) {
 }
 
 function drawPlayerName(ctx, x, y, id, ship) {
-    var string = "Player " + id;
     ctx.font = '10px Gotham Medium'
+    var message;
+    if (players[id].nickname == 'Player'){
+      message = 'Player ' + id;
+    }
+    else {
+      message = players[id].nickname;
+    }
     if (ship == 1){
-      ctx.fillText(string, x-20, y-38);
+      ctx.fillText(message, x-20, y-38);
     }
     else if (ship == 2) {
-      ctx.fillText(string, x-20, y-38);
+      ctx.fillText(message, x-20, y-38);
     }
 }
 function drawWaypoint(ctx, ship, x, y, cw, ch) {
@@ -300,7 +324,6 @@ function drawWaypoint(ctx, ship, x, y, cw, ch) {
   ctx.restore();
 }
 function drawLevelUp(ctx, cw, ch) {
-  if (leveledUp){
     ctx.save();
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
@@ -315,7 +338,61 @@ function drawLevelUp(ctx, cw, ch) {
     ctx.font = '16px Gotham Bold';
     ctx.fillText("You have reached level " + players[myid].level, cw/2 - 100, ch/2- 70);
     ctx.restore();
-  }
+}
+function drawXPHUD(ctx, currentxp, nextlevelxp, cw, ch) {
+    ctx.save();
+    //define constants for drawing
+    var barheight = 18;
+    var barfullwidth = Math.floor(cw *.5) - 3;
+    var bary = ch - 38;
+    var barx = cw/2 - barfullwidth/2;
+
+    // normalize current xp in terms of progress to next level
+    var xpgain = (currentxp - previouslevelxp) / (nextlevelxp - previouslevelxp);
+    var baroldwidth = window.xpbarwidth;
+    var barshouldbewidth = Math.floor(xpgain * barfullwidth);
+    window.xpbarwidth = window.xpbarwidth + Math.floor(.1 * (barshouldbewidth - baroldwidth));
+    var gradient = ctx.createLinearGradient(0, bary, 0, bary + 13);
+    gradient.addColorStop(0, "rgb(0, 162, 232)");
+    gradient.addColorStop(1, "rgb(0, 105, 150)");
+    ctx.fillStyle = gradient;
+    
+    ctx.fillRect (barx + 1,bary,window.xpbarwidth,barheight);
+    ctx.font = '14px Gotham Bold';
+    ctx.fillStyle = 'white';
+    ctx.fillText("xp", barx - 22, bary + 12);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgb(255,255,255)";
+    ctx.roundRect(barx, bary-1, barfullwidth + 3, barheight + 1, 5).stroke();
+    ctx.restore();
+}
+function drawEnergyHUD(ctx, currentxp, nextlevelxp, cw, ch) {
+    ctx.save();
+    //define constants for drawing
+    var barheight = 18;
+    var barfullwidth = Math.floor(cw *.5) - 3;
+    var bary = ch - 65;
+    var barx = cw/2 - barfullwidth/2;
+
+    // normalize current xp in terms of progress to next level
+    var energylevel = currentenergy / 1000;
+    var baroldwidth = window.energybarwidth;
+    var barshouldbewidth = Math.floor(energylevel * barfullwidth);
+    window.energybarwidth = window.energybarwidth - Math.floor(.1 * (barshouldbewidth - baroldwidth));
+
+    var gradient = ctx.createLinearGradient(0, bary, 0, bary + 13);
+    gradient.addColorStop(0, "rgb(137, 112, 229)");
+    gradient.addColorStop(1, "rgb(82, 72, 165)");
+    ctx.fillStyle = gradient;
+    
+    ctx.fillRect (barx + 1,bary,window.energybarwidth,barheight);
+    ctx.font = '14px Gotham Bold';
+    ctx.fillStyle = 'white';
+    ctx.fillText("energy", barx - 55, bary + 12);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgb(255,255,255)";
+    ctx.roundRect(barx, bary-1, barfullwidth + 3, barheight + 1, 5).stroke();
+    ctx.restore();
 }
 window.addEventListener("load", game, true);
 $(document.documentElement).keydown(function (event) {
@@ -408,6 +485,21 @@ function initiateStars(w,h) {
   }
   return temparray;
 }
+
+//rounded rectangle for xp bar shim
+CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h, r) {
+  if (w < 2 * r) r = w / 2;
+  if (h < 2 * r) r = h / 2;
+  this.beginPath();
+  this.moveTo(x+r, y);
+  this.arcTo(x+w, y,   x+w, y+h, r);
+  this.arcTo(x+w, y+h, x,   y+h, r);
+  this.arcTo(x,   y+h, x,   y,   r);
+  this.arcTo(x,   y,   x+w, y,   r);
+  this.closePath();
+  return this;
+}
+
 </script>
 </body>
 </html>

@@ -21,18 +21,15 @@ Add a store so we can save the player on disconnect according to some pc-unique 
 
 Give ships different movement speeds, turning speeds, and rescue distances.
 
-Add fuel mechanic.
+Add energy mechanic- slowly regenerates, need it to move.
 
 Other stuff:
-
-Add xp-bar to HUD.
 
 Attach a random message for flavor to each waypoint that is shown upon completion.
 
 Make rendering independent of game logic- right now it updates only when it receieves the request. Have it update anyways, and only provide rendering information on request. Goes hand in hand with: Switch out a single array for data and rendering for two arrays- one that has complete data (or an object) and an array that is modified every time someone disconnects or connects that has easy rendering data in a way that is fast to iterate through.
 
-
-~~Make other players ships rotate -- Rotate ships according to either their velocities or their acceleration (will probably be better to do a, but maybe harder?);~~
+~~Make other players ships rotate -- Rotate ships according to either their velocities or their acceleration (will probably be better to do a, but maybe harder?)~~
 
 ~~fix art assets that need transparent backgrounds~~
 
@@ -57,6 +54,8 @@ Make rendering independent of game logic- right now it updates only when it rece
 ~~Refine interface- chat takes up too much of the screen right now.~~
 
 ~~Need 8 art assets:Add in scrapped ships at waypoints. Make ship differences meaningful. Make at least 5 ships. Have everyone start at the first ship, then you can choose upon level up.~~
+
+~~Add xp-bar to HUD.~~
 
 License terms
 -------------
