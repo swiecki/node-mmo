@@ -13,6 +13,8 @@ Idea for gameplay: you are a lifeboat. save people in space. You have to go arou
 TODO
 ----
 
+Change waypoints to be the same for everyone, give each player a current waypoint index and keep the next ones on the server in an array along wihth whether or not they are completed. Make waypoints go away after half the current players have gotten it. Those players immediately move on to the next waypoint?
+
 Add prerendered versions of all ships, make ship choice random.
 
 Amend CSS file to add scalable user interface.
