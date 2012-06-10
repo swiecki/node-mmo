@@ -19,7 +19,7 @@
   </form>
   <a id="mute" class="button" href='#'>mute</a>
   </div>
-  
+ 
 <!--preload fonts-->
 <div style="font-family: Gotham Thin;">.</div>
 <div style="font-family: Gotham Medium;">.</div>
@@ -50,14 +50,14 @@ socket.on('newstart', function (data) {
   ship = data.ship;
   currentenergy = data.energy;
   players = data.currentplayers;
-  players[myid] = { id: myid, ship: ship, x: 0, y: 0, a:0, level:0, xp:0, wp:waypoint};
+  players[myid] = {id:myid,ship:ship,x:0,y:0,a:0,level:0,xp:0,wp:waypoint};
   window.tutorial = true;
   window.tutorialText = true;
   setTimeout( function() {window.tutorialText = false;}, 5000);
   setTimeout( function() {window.tutorial = false;}, 10000);
 });
 socket.on('newguy', function (data) {
-  players[data.id] = ({id: data.id, ship: data.ship, x: data.x, y: data.y });
+  players[data.id] = ({id:data.id,ship:data.ship,x:data.x,y:data.y});
 });
 socket.on('disconnect', function () {
   $("#chatlist").append('<li style="font-family:Gotham Bold;color:#00A2E8;">You were disconnected</li>');
@@ -166,8 +166,10 @@ function game() {
   //reset canvas in between each frame, paint it black for space
   context.fillStyle = 'black';
   context.fillRect(0, 0, context_width, context_height);
-  drawAll(context, s_canvas, context_width, context_height, backgroundstars, b_canvas, resueship_canvas);
-  
+  //does the equivalent of the server-side insanity test to make sure that the players object actually exists before trying to take its properties inside the drawAll method
+  if (players[myid] !== null && players[myid] !== undefined && players[myid].hasOwnProperty("x")){
+    drawAll(context, s_canvas, context_width, context_height, backgroundstars, b_canvas, resueship_canvas);
+  }
   //fps counter
   stats.end();
   }, 33);
@@ -175,8 +177,7 @@ function game() {
 
 function updateAll() {
   // send a single update packet with everything that's happened
-
-    socket.emit('dataupdate', { id: myid, up: upp, down: downp, left: leftp, right: rightp, xpressed: xstop, energy: currentenergy });
+    socket.emit('dataupdate',{id:myid,up:upp,down:downp,left:leftp,right:rightp,xpressed:xstop,energy:currentenergy});
 }
   
 function drawAll(context, s_canvas, cw, ch, bgstars, b_canvas, resueship_canvas) {
@@ -251,12 +252,7 @@ function bgimgdraw(ctx, px, py, b_canvas) {
 }
 
 function drawPlayer(ctx, ship, x, y, a, center, cw, ch, enginesGo) {
-  if (ship == 1) {
-    ship1draw(ctx,x,y,a,center, cw, ch, enginesGo);
-  }
-  else if (ship == 2) {
-    ship2draw(ctx,x,y,a,center, cw, ch, enginesGo);
-  }
+  shipDraw(ctx,x,y,a,center,cw,ch,ship,enginesGo) 
 }
 
 function drawWreckedShip(ctx, px, py, cw, ch, resueship_canvas) {
@@ -482,7 +478,9 @@ $("#chat").submit(function(event) {
   else {
     var value = $("#chattext").val();
     $("#chattext").val('');
-    socket.emit('chatmessagesend', { id: myid, nick: nickname, playermsg: true, msg: value });
+    if (value != ''){
+      socket.emit('chatmessagesend', { id: myid, nick: nickname, playermsg: true, msg: value });
+    }
   }
 });
 //mute audio

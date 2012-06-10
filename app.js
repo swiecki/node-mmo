@@ -1,4 +1,3 @@
-
 /**
  * Module dependencies.
  */
@@ -63,18 +62,18 @@ io.sockets.on('connection', function (socket) {
       startenergy = 1000,
       regentime = new Date(),
       waypoint = {x:1500, y:-1500, xp:5};
-  
+      iShip = Math.floor(Math.random() * (9 - 2 ) + 1);
   //set up the new player
-  socket.emit('newstart', { id: clientid, slist:bigstarlist, ship: 1, x: 0, y: 0, wp:waypoint, xp: 0, level: 1, energy:startenergy, currentplayers: players});
+  socket.emit('newstart', {id: clientid,slist:bigstarlist,ship:iShip,x:0,y:0,wp:waypoint,xp:0,level:1,energy:startenergy,currentplayers:players});
   
   //tell everyone about the new player
-  socket.broadcast.emit('newguy', { id: clientid, ship: 1, x: 0, y: 0 });
+  socket.broadcast.emit('newguy',{id:clientid,ship:iShip,x:0,y:0});
   
   //add the player to the list of players
-  players[clientid] = {id: clientid, ship: 1, nickname: 'Player', x: 0, y: 0, xv : xvel, xa : xacc, yv: yvel, ya: yacc, a:0, energy: startenergy, wp:waypoint, xp:0, level:1 };
+  players[clientid] = {id:clientid,ship:iShip,nickname:'Player',x:0,y:0,xv:xvel,xa:xacc,yv:yvel,ya:yacc,a:0,energy:startenergy,wp:waypoint,xp:0,level:1};
   
   //set id to be associated with socket
-  socket.set('identification', clientid);
+  socket.set('identification',clientid);
   clientid ++;
   
   socket.on('disconnect', function (data) {
@@ -269,7 +268,7 @@ io.sockets.on('connection', function (socket) {
     io.sockets.emit('chatmessageresponse', {playermsg:false, id:null, msg: message + '\'s position was reset. You cannot fly that far out into deep space.'});
     }
     socket.emit('update', players[id]);
-    var trimmedData = { id: id, x: players[id].x, y: players[id].y, a: players[id].a, ship: players[id].ship, nickname: players[id].nickname, engine: players[id].engine };
+    var trimmedData = {id:id,x:players[id].x,y:players[id].y,a:players[id].a,ship:players[id].ship,nickname:players[id].nickname,engine:players[id].engine};
     socket.broadcast.emit('update', trimmedData);
    }
   };
