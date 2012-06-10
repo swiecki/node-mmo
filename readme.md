@@ -63,6 +63,6 @@ Make rendering independent of game logic- right now it updates only when it rece
 License terms
 -------------
 
-This software is available under the creative commons Attribution-NonCommercial 2.5 license, as detailed at the link below.
+This software is available under the creative commons Attribution-NonCommercial 3.0 license, as detailed at the link below.
 
-http://creativecommons.org/licenses/by-nc/2.5/
+http://creativecommons.org/licenses/by-nc/3.0/
